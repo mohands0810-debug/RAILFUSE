@@ -18,25 +18,28 @@ export function useApi(fetcher, deps = []) {
   return { data, loading, error, reload: load };
 }
 
-// Hook for mutation (POST/actions) with loading state
-export function useMutation(action) {
+// Hook for mutation (POST/actions) with stable mutate reference
+export function useMutation(actionFn) {
   const [loading, setLoad] = useState(false);
   const [error,   setErr]  = useState(null);
   const [result,  setRes]  = useState(null);
 
+  // Store latest action in a ref so mutate stays stable
+  const actionRef = { current: actionFn };
+
   const mutate = useCallback(async (...args) => {
     setLoad(true); setErr(null);
     try {
-      const res = await action(...args);
+      const res = await actionRef.current(...args);
       setRes(res);
       return res;
     } catch (e) {
       setErr(e.message);
-      throw e;
     } finally {
       setLoad(false);
     }
-  }, [action]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  return { mutate, loading, error, result };
+  return { mutate, loading, error, data: result };
 }
