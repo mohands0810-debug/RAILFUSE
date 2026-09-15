@@ -74,18 +74,17 @@ pytest tests/ --cov=. --cov-report=html --cov-report=term-missing
 | test_section_mismatch | Task in different section | REJECTED (section) |
 | test_section_match | Task in same section | FEASIBLE |
 
-### 4. Opportunity Graph (test_opportunity_graph.py)
+### 4. Opportunity Graph Logic (within test_optimizer.py)
 
-| Test | Description | Expected |
-|------|-------------|---------|
-| test_graph_single_node | One feasible task | Graph with 1 node, 0 edges |
-| test_graph_compatible_pair | Two compatible tasks | Graph with edge |
-| test_graph_incompatible_pair | Incompatible departments | No edge |
-| test_graph_resource_conflict | Shared resource | No edge |
-| test_combinations_empty | No feasible tasks | Empty list |
-| test_combinations_single | One task | One combination |
-| test_combinations_pair | Two compatible tasks | [T1], [T2], [T1,T2] |
-| test_combination_duration_check | Combined duration exceeds capacity | Pair excluded |
+Opportunity graph construction and combination generation is tested through the optimizer integration tests. Key scenarios covered:
+
+| Behavior | Covered By |
+|----------|------------|
+| Single feasible task produces 1 combination | CASE A |
+| Two compatible tasks produce joint combination | CASE F |
+| Incompatible departments — no joint combination | CASE B/C |
+| Resource conflict prevents joint assignment | CASE D |
+| Combined duration exceeding capacity excluded | CASE B |
 
 ### 5. Optimizer (test_optimizer.py)
 

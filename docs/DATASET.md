@@ -224,12 +224,14 @@ python generate_dataset.py
 
 This will overwrite the JSON files in `data/synthetic/` with freshly generated synthetic data using fixed seed (42) for reproducibility.
 
-To reset to the original dataset:
+To regenerate the dataset from scratch:
 
 ```bash
 cd scripts
-python seed_data.py
+python generate_dataset.py
 ```
+
+This will overwrite `data/synthetic/` with fresh synthetic data (fixed seed=42).
 
 ---
 

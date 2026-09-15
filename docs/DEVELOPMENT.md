@@ -222,8 +222,8 @@ curl http://localhost:8000/
 ### Dataset errors
 
 ```bash
-# Reset dataset to defaults
-cd scripts && python seed_data.py
+# Regenerate synthetic dataset
+cd scripts && python generate_dataset.py
 ```
 
 ---
