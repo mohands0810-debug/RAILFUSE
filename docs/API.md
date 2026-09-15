@@ -399,8 +399,10 @@ The prototype API does not require authentication. In a production deployment, J
 ## CORS
 
 The API allows requests from:
-- `http://localhost:3000` (Next.js frontend)
+- `http://localhost:3000` (Vite + React frontend)
 - `http://localhost:3001`
+- `http://127.0.0.1:3000`
+- `http://127.0.0.1:3001`
 
 ---
 

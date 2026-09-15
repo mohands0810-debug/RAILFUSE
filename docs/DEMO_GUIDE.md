@@ -13,7 +13,7 @@
 cd backend && uvicorn main:app --reload
 
 # Terminal 2: Frontend
-cd frontend && npm run dev
+cd frontend-react && npm run dev
 ```
 
 Open http://localhost:3000
@@ -21,12 +21,12 @@ Open http://localhost:3000
 ### 2. Demo Sequence
 
 1. **Command Center** → Show live KPIs from actual calculations
-2. **Maintenance Tasks** → Show 25 tasks with debt/flexibility scores
-3. **Available Blocks** → Show 10 blocks with capacity
-4. **Click "Run Optimization"** → Watch algorithm run in real time
-5. **Opportunity Engine** → Select BLK006 → See compatible combination T011+T012
-6. **Optimized Plan** → Review Gantt chart
-7. **What-If** → Increase T015 severity → Re-run → Confirm result changes
+2. **Maintenance Tasks** → Show 25 tasks with debt/flexibility scores, filter by department
+3. **Block Explorer** → Show 10 blocks → click one to see inline opportunity graph
+4. **Click "Run Optimizer"** → Watch algorithm run in real time
+5. **Opportunity Engine** → Select BLK003 → See compatible combination T011+T012
+6. **Plan Optimizer** → Adjust weights → Re-run → Show plan changes
+7. **What-If** → Increase T015 severity to 5 → Re-run → Confirm result changes
 
 ---
 
@@ -91,10 +91,10 @@ Watch the result:
 > *"The optimizer has just run through 10 blocks, 25 tasks, 24 train movements, and 12 resources. Let me show you what it found."*
 
 Show the summary:
-- 12 tasks planned
-- 8 deferred
-- 2 protected
-- 0 minutes additional possession for 7 of 10 blocks
+- **9 tasks planned** across 7 of 10 blocks
+- **6 deferred** (better future windows exist)
+- **10 rejected** (section mismatch, train conflicts, or capacity)
+- **0 minutes additional possession** for 6 of the 7 assigned blocks
 
 ---
 
@@ -140,16 +140,14 @@ Show the explanation panel:
 
 ### Scene 6: Optimized Plan / Gantt (1 minute)
 
-Open **Optimized Plan**.
+Open **Plan Optimizer** page.
 
-Show the Gantt chart:
-- 10 blocks on the timeline
-- Maintenance tasks within blocks (colored by department)
-- Train movements shown (grey bars)
-- Green = planned, amber = deferred, grey = protected
+Show the current plan table:
+- Tasks planned by block (BLK001, BLK003, BLK005, etc.)
+- Block values and zero-possession counts
 
-Click **BLK006**:
-> *"T011 and T012 are shown side by side within the same 120-minute block. No additional possession was needed."*
+Click a block row:
+> *"T011 and T012 are both scheduled within the 105-minute BLK003 window. No additional possession was needed."*
 
 ---
 

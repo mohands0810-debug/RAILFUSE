@@ -26,8 +26,7 @@ pytest tests/ -v
 ```bash
 pytest tests/test_intelligence.py -v    # Maintenance debt + flexibility
 pytest tests/test_conflicts.py -v       # Conflict detection
-pytest tests/test_opportunity_graph.py -v  # Opportunity graph
-pytest tests/test_optimizer.py -v       # Full optimization
+pytest tests/test_optimizer.py -v       # Full optimization pipeline
 pytest tests/test_api.py -v             # API endpoints
 ```
 
@@ -234,11 +233,10 @@ Unit test fixtures are defined in `tests/conftest.py`.
 | Suite | Tests | Expected Pass |
 |-------|-------|--------------|
 | test_intelligence.py | 12 | 12/12 |
-| test_conflicts.py | 9 | 9/9 |
-| test_opportunity_graph.py | 8 | 8/8 |
-| test_optimizer.py | 15 | 15/15 |
+| test_conflicts.py | 14 | 14/14 |
+| test_optimizer.py | 38 | 38/38 |
 | test_api.py | 15 | 15/15 |
-| **Total** | **59** | **59/59** |
+| **Total** | **79** | **79/79** |
 
 ---
 

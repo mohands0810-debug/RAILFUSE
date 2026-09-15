@@ -49,7 +49,7 @@ pip install -r requirements.txt
 ### 4. Frontend Setup
 
 ```bash
-cd frontend
+cd frontend-react
 npm install
 ```
 
@@ -73,7 +73,7 @@ API Docs: http://localhost:8000/docs
 ### Start Frontend
 
 ```bash
-cd frontend
+cd frontend-react
 npm run dev
 ```
 
@@ -100,16 +100,16 @@ RAILFUSE/
 │   ├── optimization/            # Core algorithm
 │   ├── api/                     # API routes
 │   └── tests/                   # pytest tests
-├── frontend/                    # Next.js app
+├── frontend-react/              # Vite + React SPA
 │   ├── package.json
-│   ├── src/
-│   │   ├── app/                 # Next.js App Router
-│   │   ├── components/          # React components
-│   │   └── lib/                 # Utilities and API client
-│   └── public/
+│   ├── vite.config.js           # Proxy /api → localhost:8000
+│   └── src/
+│       ├── api/client.js        # Typed API client
+│       ├── hooks/useApi.js      # Data-fetching hooks
+│       ├── components/UI.jsx    # Shared components
+│       └── pages/               # 6 page components
 └── scripts/
-    ├── generate_dataset.py      # Regenerate synthetic data
-    └── seed_data.py             # Reset data to defaults
+    └── generate_dataset.py      # Regenerate synthetic data
 ```
 
 ---
@@ -128,8 +128,7 @@ pytest tests/ -v
 ```bash
 pytest tests/test_intelligence.py -v    # Debt and flexibility
 pytest tests/test_conflicts.py -v       # Conflict detection
-pytest tests/test_opportunity_graph.py -v  # Graph engine
-pytest tests/test_optimizer.py -v       # Optimization
+pytest tests/test_optimizer.py -v       # Optimization pipeline
 pytest tests/test_api.py -v             # API endpoints
 ```
 
@@ -145,8 +144,7 @@ pytest tests/ --cov=. --cov-report=html
 
 ```bash
 cd scripts
-python generate_dataset.py   # Create fresh synthetic data
-python seed_data.py          # Reset to original dataset
+python generate_dataset.py   # Recreate fresh synthetic data
 ```
 
 ---
@@ -162,8 +160,8 @@ python seed_data.py          # Reset to original dataset
 
 ### Frontend Changes
 
-1. Edit files in `frontend/src/`
-2. Frontend hot-reloads automatically
+1. Edit files in `frontend-react/src/`
+2. Vite hot-reloads automatically (HMR)
 3. Check browser console for errors
 
 ### Adding a New Optimization Feature
@@ -216,10 +214,8 @@ netstat -an | findstr 8000
 ### Frontend API errors
 
 ```bash
-# Check NEXT_PUBLIC_API_URL in .env
-# Default: http://localhost:8000
-
-# Check backend is running
+# Vite proxies /api to http://localhost:8000 via vite.config.js
+# Check backend is running:
 curl http://localhost:8000/
 ```
 
@@ -269,7 +265,6 @@ git push origin main
 | `RAILFUSE_HOST` | 0.0.0.0 | Backend host |
 | `RAILFUSE_PORT` | 8000 | Backend port |
 | `RAILFUSE_DEBUG` | true | Debug mode |
-| `NEXT_PUBLIC_API_URL` | http://localhost:8000 | Frontend API URL |
 | `OPTIMIZER_SEED` | 42 | Random seed |
 | `OPTIMIZER_LOOKAHEAD_DEPTH` | 3 | Look-ahead depth |
 

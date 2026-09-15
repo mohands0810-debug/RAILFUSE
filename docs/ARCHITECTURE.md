@@ -64,14 +64,14 @@
 │  └──────────────────────┬──────────────────────────────┘   │
 │                         │                                   │
 │  ┌──────────────────────▼──────────────────────────────┐   │
-│  │           Next.js / React Frontend                   │   │
-│  │  ├── Command Center Dashboard                        │   │
-│  │  ├── Maintenance Tasks View                          │   │
-│  │  ├── Available Blocks View                           │   │
-│  │  ├── Opportunity Engine (HERO SCREEN)                │   │
-│  │  ├── Optimized Plan (Gantt)                          │   │
-│  │  └── What-If Analysis                                │   │
-│  └─────────────────────────────────────────────────────┘   │
+│  │           Vite + React SPA (frontend-react/)            │   │
+│  │  ├── Command Center Dashboard (live Recharts)            │   │
+│  │  ├── Maintenance Tasks (filterable + expandable rows)    │   │
+│  │  ├── Block Explorer (inline opportunity graph)           │   │
+│  │  ├── Opportunity Engine (HERO SCREEN)                    │   │
+│  │  ├── Plan Optimizer (weight sliders, live re-run)        │   │
+│  │  └── What-If Simulator (side-by-side comparison)         │   │
+│  └─────────────────────────────────────────────────────────┘   │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -84,17 +84,18 @@
 
 **Location:** `backend/models/`
 
-**Purpose:** Defines and validates all data structures using Pydantic models.
+**Purpose:** Defines and validates all data structures using Pydantic v2 models.
 
-**Files:**
-- `task.py` — MaintenanceTask model
-- `block.py` — MaintenanceBlock model
-- `train.py` — TrainMovement model
-- `resource.py` — Resource model
-- `compatibility.py` — CompatibilityRule model
-- `optimization.py` — OptimizationConfig and results
+**File:** `backend/models/__init__.py` — all models in one file:
+- `MaintenanceTask` — task with debt/flexibility scores
+- `MaintenanceBlock` — block with capacity and timing
+- `TrainMovement` — train arrival/departure windows
+- `Resource` — equipment availability
+- `CompatibilityRule` — department pair rules
+- `OptimizationConfig` — configurable weights
+- `OptimizedPlan`, `BlockAssignment`, `TaskDecision` — result models
 
-**Key Design Decision:** Pydantic is used for data validation and serialization. All timestamps are stored as ISO strings for JSON compatibility. All IDs are string-typed.
+**Key Design Decision:** Pydantic v2 is used for data validation and serialization. All timestamps are ISO strings for JSON compatibility.
 
 ---
 
@@ -189,18 +190,19 @@
 
 ---
 
-### 8. Next.js Frontend
+### 8. Vite + React Frontend
 
-**Location:** `frontend/`
+**Location:** `frontend-react/`
 
-**Purpose:** Interactive prototype UI for SIH demonstration.
+**Purpose:** Interactive prototype SPA for SIH demonstration.
 
 **Design:**
-- Server-side rendering disabled for simplicity (client-side React)
-- All API calls via `lib/api.ts` abstraction layer
-- Recharts for Gantt and analytics charts
-- Tailwind CSS for styling
-- Professional, data-dense, railway-operations aesthetic (no excessive decorations)
+- Single Page Application (SPA) with React Router v7 — 6 pages
+- All API calls via `src/api/client.js` typed API client
+- Recharts for bar, pie, and radar charts
+- Vanilla CSS with custom CSS variables (`src/index.css`) — dark theme design system
+- Vite dev server proxies `/api` → `http://localhost:8000` (no CORS issues in dev)
+- `useApi` and `useMutation` hooks for all data fetching
 
 ---
 
@@ -236,83 +238,58 @@ RAILFUSE/
 ├── .gitignore
 ├── .env.example
 │
-├── docs/                        ← Documentation
-│   ├── PROJECT_OVERVIEW.md
-│   ├── ARCHITECTURE.md
-│   ├── ALGORITHM.md
-│   ├── DATASET.md
-│   ├── API.md
-│   ├── DEVELOPMENT.md
-│   ├── DEMO_GUIDE.md
-│   ├── RESEARCH_AND_ASSUMPTIONS.md
-│   ├── TESTING.md
-│   └── FINAL_VERIFICATION.md
+├── docs/                        ← Documentation (9 files)
 │
 ├── data/                        ← Synthetic data files
-│   ├── synthetic/
-│   │   ├── tasks.json
-│   │   ├── blocks.json
-│   │   ├── trains.json
-│   │   ├── resources.json
-│   │   └── compatibility_rules.json
-│   └── schemas/
-│       └── schema.md
+│   └── synthetic/
+│       ├── tasks.json           ← 25 maintenance tasks
+│       ├── blocks.json          ← 10 maintenance blocks
+│       ├── trains.json          ← 24 train movements
+│       ├── resources.json       ← 12 resources
+│       └── compatibility_rules.json ← 8 department rules
 │
 ├── backend/                     ← Python FastAPI backend
-│   ├── main.py
+│   ├── main.py                  ← FastAPI app with lifespan startup
+│   ├── config.py                ← Path config and env vars
+│   ├── data_loader.py           ← JSON → Pydantic loader
 │   ├── requirements.txt
-│   ├── config.py
 │   ├── models/
-│   │   ├── __init__.py
-│   │   ├── task.py
-│   │   ├── block.py
-│   │   ├── train.py
-│   │   ├── resource.py
-│   │   ├── compatibility.py
-│   │   └── optimization.py
+│   │   └── __init__.py          ← All Pydantic models
 │   ├── optimization/
 │   │   ├── __init__.py
-│   │   ├── intelligence.py
-│   │   ├── conflicts.py
-│   │   ├── opportunity_graph.py
-│   │   ├── optimizer.py
-│   │   └── explainability.py
-│   ├── api/
-│   │   ├── __init__.py
-│   │   └── routes.py
+│   │   ├── intelligence.py      ← Debt + flexibility scoring
+│   │   ├── conflicts.py         ← Train/resource/spatial checks
+│   │   ├── opportunity_graph.py ← Graph + combination generator
+│   │   ├── optimizer.py         ← Main optimization pipeline
+│   │   └── explainability.py    ← Per-decision explanation engine
 │   └── tests/
-│       ├── __init__.py
-│       ├── test_intelligence.py
-│       ├── test_conflicts.py
-│       ├── test_opportunity_graph.py
-│       ├── test_optimizer.py
-│       └── test_api.py
+│       ├── conftest.py          ← Shared fixtures
+│       ├── test_intelligence.py ← 12 tests
+│       ├── test_conflicts.py    ← 14 tests
+│       ├── test_optimizer.py    ← 38 tests
+│       └── test_api.py          ← 15 tests
 │
-├── frontend/                    ← Next.js frontend
+├── frontend-react/              ← Vite + React SPA (Node.js 24)
+│   ├── index.html
+│   ├── vite.config.js           ← Proxy /api → :8000
 │   ├── package.json
-│   ├── next.config.js
-│   ├── tailwind.config.js
-│   ├── public/
 │   └── src/
-│       ├── app/
-│       │   ├── layout.tsx
-│       │   ├── page.tsx
-│       │   └── globals.css
-│       ├── components/
-│       │   ├── layout/
-│       │   ├── dashboard/
-│       │   ├── tasks/
-│       │   ├── blocks/
-│       │   ├── opportunity/
-│       │   ├── gantt/
-│       │   └── whatif/
-│       └── lib/
-│           ├── api.ts
-│           └── types.ts
+│       ├── main.jsx             ← Router entry point
+│       ├── App.jsx              ← Sidebar layout + nav
+│       ├── index.css            ← CSS variables + global styles
+│       ├── api/client.js        ← Typed API client
+│       ├── hooks/useApi.js      ← useApi + useMutation hooks
+│       ├── components/UI.jsx    ← Shared components
+│       └── pages/
+│           ├── Dashboard.jsx
+│           ├── Tasks.jsx
+│           ├── Blocks.jsx
+│           ├── Opportunities.jsx
+│           ├── Optimizer.jsx
+│           └── WhatIf.jsx
 │
 └── scripts/
-    ├── generate_dataset.py      ← Dataset generation script
-    └── seed_data.py             ← Data seeding script
+    └── generate_dataset.py      ← Synthetic dataset generator
 ```
 
 ---
@@ -322,11 +299,11 @@ RAILFUSE/
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Backend framework | FastAPI | Type-safe, async, auto-docs, lightweight |
-| Data validation | Pydantic | Native FastAPI integration, schema enforcement |
-| Optimization | Custom heuristic + optional OR-Tools | Explainability requirement; heuristic is transparent |
-| Frontend | Next.js + React | Industry standard, good TypeScript support |
-| Styling | Tailwind CSS | Rapid prototyping, utility-first |
-| Charts | Recharts | React-native, good Gantt support |
+| Data validation | Pydantic v2 | Native FastAPI integration, schema enforcement |
+| Optimization | Custom deterministic heuristic | Explainability requirement; fully transparent, no external solver |
+| Frontend | Vite + React 19 | Fast HMR, component architecture, no SSR complexity |
+| Styling | CSS custom properties (vanilla CSS) | Full control, dark theme system, no framework dependency |
+| Charts | Recharts | React-native, good bar/pie/radar support |
 | Testing | pytest + httpx | Standard Python testing stack |
 
 ---
