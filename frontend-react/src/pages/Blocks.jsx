@@ -2,101 +2,83 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { api } from '../api/client';
 
-/* Real Block fields from API:
-   block_id, corridor, section, start_time, end_time, duration (minutes),
-   block_type, available_resources[], affected_track, safety_constraints[],
-   existing_tasks[], remaining_capacity, notes
-   
-   Real Opportunity fields:
-   block_id, section, duration, remaining_capacity,
-   feasible_tasks: string[], (task IDs)
-   compatible_combinations: [{ tasks:[], total_duration, remaining_after,
-     additional_possession, base_value, adjusted_value, zero_possession }]
-*/
-
 const C = {
-  brand:'#FF6E8F', purple:'#c084fc', cyan:'#67e8f9',
-  green:'#34d399', amber:'#fbbf24', red:'#f87171', blue:'#60a5fa',
+  orange: '#f97316', green: '#22c55e', amber: '#f59e0b',
+  red: '#ef4444', blue: '#3b82f6', purple: '#a855f7',
 };
 
-const fmtTime = s => s ? s.substring(11,16) : '—';
-const fmtDate = s => s ? new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : '—';
+const fmtTime = s => s ? s.substring(11, 16) : '—';
+const fmtDate = s => s ? new Date(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—';
 
-function CapacityRing({ used, total }) {
-  const pct = total>0 ? Math.min((used/total)*100,100) : 0;
-  const r=22, circ=2*Math.PI*r;
-  const dash=(pct/100)*circ;
-  const color=pct>=90?C.red:pct>=70?C.amber:pct<=30?C.green:C.brand;
-  return (
-    <svg width={54} height={54} viewBox="0 0 54 54" style={{ flexShrink:0 }}>
-      <circle cx={27} cy={27} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={5}/>
-      <circle cx={27} cy={27} r={r} fill="none" stroke={color} strokeWidth={5}
-        strokeDasharray={`${dash} ${circ-dash}`} strokeDashoffset={circ*0.25} strokeLinecap="round"
-        style={{ transition:'stroke-dasharray 1s var(--ease-snap)' }}/>
-      <text x={27} y={27} textAnchor="middle" dominantBaseline="central"
-        fill={color} fontSize={10} fontWeight={800} fontFamily="var(--mono)">
-        {Math.round(pct)}%
-      </text>
-    </svg>
-  );
-}
+const COLORS = [C.orange, C.blue, C.green, C.amber, C.red, C.purple];
 
 function BlockCard({ block, isSelected, onClick }) {
-  // capacity = duration minutes (the full block), utilized = duration - remaining_capacity
-  const cap     = block.duration || block.remaining_capacity || 0;
+  const cap     = block.duration || 0;
   const remain  = block.remaining_capacity ?? cap;
-  const utilized= cap - remain;
-  const startDt = block.start_time;
-  const endDt   = block.end_time;
+  const utilized = cap - remain;
+  const utilPct  = cap > 0 ? Math.min((utilized / cap) * 100, 100) : 0;
+  const barColor = utilPct >= 90 ? C.red : utilPct >= 70 ? C.amber : C.orange;
 
   return (
-    <div onClick={onClick} style={{
-      background:'var(--bg-card)', border:`1px solid ${isSelected?C.brand:'var(--border)'}`,
-      borderRadius:'var(--r-lg)', padding:'16px', cursor:'pointer',
-      boxShadow:isSelected?`0 0 0 2px ${C.brand}40, 0 0 24px ${C.brand}20`:'none',
-      transform:isSelected?'translateY(-2px)':'none',
-      transition:'all 0.25s var(--ease-out)',
-    }}>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+    <div
+      className="card-hover"
+      onClick={onClick}
+      style={{
+        background: 'var(--bg-card)',
+        border: `1px solid ${isSelected ? C.orange : 'var(--border)'}`,
+        borderTop: isSelected ? `2px solid ${C.orange}` : '1px solid var(--border)',
+        borderRadius: 'var(--r-lg)',
+        padding: 18,
+        cursor: 'pointer',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <div>
-          <div style={{ fontSize:13, fontWeight:800, fontFamily:'var(--mono)',
-            color:isSelected?C.brand:'var(--text-1)' }}>{block.block_id}</div>
-          <div style={{ fontSize:10.5, color:'var(--text-3)', marginTop:2 }}>{block.section}</div>
-          {block.block_type && (
-            <div style={{ fontSize:10, color:C.cyan, marginTop:2, fontWeight:600 }}>{block.block_type}</div>
-          )}
+          <div style={{ fontSize: 13.5, fontWeight: 800, fontFamily: 'var(--mono)',
+            letterSpacing: '-0.01em',
+            color: isSelected ? C.orange : 'var(--text-1)' }}>{block.block_id}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 2 }}>{block.section}</div>
         </div>
-        <CapacityRing used={utilized} total={cap}/>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-4)',
+          background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',
+          padding: '2px 8px', borderRadius: 6 }}>{block.block_type?.split(' ')[0] || 'Block'}</span>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'6px 10px', marginBottom:10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px 14px', marginBottom: 12 }}>
         {[
-          ['⏱ Capacity', `${cap} min`],
-          ['📅 Date',    fmtDate(startDt)],
-          ['🕐 Start',   fmtTime(startDt)],
-          ['🕑 End',     fmtTime(endDt)],
-          ['🛤 Track',   block.affected_track||'—'],
-          ['🚇 Corridor',block.corridor ? block.corridor.split('-')[0] : '—'],
-        ].map(([k,v])=>(
+          ['Capacity',  `${cap} min`],
+          ['Remaining', `${remain} min`],
+          ['Date',      fmtDate(block.start_time)],
+          ['Window',    `${fmtTime(block.start_time)}–${fmtTime(block.end_time)}`],
+          ['Track',     block.affected_track || '—'],
+          ['Corridor',  block.corridor?.split('-')[0] || '—'],
+        ].map(([k, v]) => (
           <div key={k}>
-            <div style={{ fontSize:9.5, color:'var(--text-4)', marginBottom:1 }}>{k}</div>
-            <div style={{ fontSize:11.5, fontWeight:600, color:'var(--text-2)' }}>{v}</div>
+            <div style={{ fontSize: 9.5, color: 'var(--text-5)', textTransform: 'uppercase',
+              letterSpacing: '0.08em', marginBottom: 1 }}>{k}</div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-2)' }}>{v}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ height:3, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
-        <div style={{ width:`${Math.min((utilized/cap)*100,100)}%`, height:'100%',
-          background:utilized/cap>=0.9?C.red:utilized/cap>=0.7?C.amber:C.brand,
-          borderRadius:2, transition:'width 0.8s var(--ease-snap)' }}/>
+      {/* Utilization bar */}
+      <div style={{ marginBottom: block.safety_constraints?.length > 0 ? 10 : 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-5)', marginBottom: 4 }}>
+          <span>Utilization</span>
+          <span style={{ color: barColor, fontFamily: 'var(--mono)', fontWeight: 700 }}>{Math.round(utilPct)}%</span>
+        </div>
+        <div style={{ height: 3, background: 'var(--border-2)', borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{ width: `${utilPct}%`, height: '100%', background: barColor, borderRadius: 2,
+            transition: 'width 0.7s var(--ease)' }} />
+        </div>
       </div>
 
-      {block.safety_constraints?.length>0 && (
-        <div style={{ marginTop:8, display:'flex', gap:4, flexWrap:'wrap' }}>
-          {block.safety_constraints.slice(0,3).map(s=>(
-            <span key={s} style={{ fontSize:9.5, color:C.amber, background:`${C.amber}12`,
-              padding:'2px 6px', borderRadius:4, border:`1px solid ${C.amber}25` }}>
-              {s.replace(/_/g,' ')}
+      {block.safety_constraints?.length > 0 && (
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
+          {block.safety_constraints.slice(0, 3).map(s => (
+            <span key={s} style={{ fontSize: 9.5, color: C.amber, background: 'rgba(245,158,11,0.08)',
+              padding: '2px 7px', borderRadius: 4, border: '1px solid rgba(245,158,11,0.18)' }}>
+              {s.replace(/_/g, ' ')}
             </span>
           ))}
         </div>
@@ -106,173 +88,170 @@ function BlockCard({ block, isSelected, onClick }) {
 }
 
 export default function Blocks() {
-  const { data: blocks, loading: bLoad } = useApi(()=>api.blocks());
-  const { data: opps,   loading: oLoad } = useApi(()=>api.opportunities());
+  const { data: blocks, loading: bLoad } = useApi(() => api.blocks());
+  const { data: opps,   loading: oLoad } = useApi(() => api.opportunities());
   const [selected, setSelected] = useState(null);
 
-  if (bLoad||oLoad) return (
+  if (bLoad || oLoad) return (
     <div className="page">
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(230px,1fr))', gap:12 }}>
-        {[...Array(6)].map((_,i)=><div key={i} className="skeleton" style={{ height:200 }}/>)}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+        {[...Array(6)].map((_, i) => <div key={i} className="skeleton" style={{ height: 210 }} />)}
       </div>
     </div>
   );
 
-  const selBlock = (blocks||[]).find(b=>b.block_id===selected);
-  const selOpps  = (opps||[]).find(o=>o.block_id===selected);
-
-  // feasible_tasks is an array of task ID strings
+  const selBlock = (blocks || []).find(b => b.block_id === selected);
+  const selOpps  = (opps   || []).find(o => o.block_id === selected);
   const feasible = selOpps?.feasible_tasks || [];
-  // compatible_combinations is an array of combo objects
-  const combos   = selOpps?.compatible_combinations || selOpps?.combinations || [];
-
-  const COLORS=[C.brand,C.purple,C.cyan,C.green,C.amber,C.red,C.blue];
+  const combos   = selOpps?.compatible_combinations || [];
 
   return (
     <div className="page">
-      <div className="page-header anim-blur">
-        <div className="page-eyebrow" style={{ color:C.brand }}>Maintenance Windows</div>
-        <h1 className="page-title" style={{ background:`linear-gradient(135deg,${C.brand},${C.purple})`,
-          WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
-          Block Explorer
-        </h1>
-        <p className="page-subtitle">{blocks?.length||0} maintenance windows · Click a block to reveal opportunities</p>
+      <div className="ob-fade-up">
+        <div className="page-eyebrow">Maintenance Windows</div>
+        <h1 className="page-title">Block Explorer</h1>
+        <p className="page-subtitle">{blocks?.length || 0} maintenance windows · select a block to see opportunities</p>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
-        {/* Left: block cards */}
-        <div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-            {(blocks||[]).map((b,i)=>(
-              <div key={b.block_id} className="anim-blur-up" style={{ animationDelay:`${i*0.04}s` }}>
-                <BlockCard block={b} isSelected={selected===b.block_id}
-                  onClick={()=>setSelected(p=>p===b.block_id?null:b.block_id)}/>
-              </div>
-            ))}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' }}>
+        {/* Block grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {(blocks || []).map((b, i) => (
+            <div key={b.block_id} className="ob-fade-up" style={{ animationDelay: `${i * 0.04}s` }}>
+              <BlockCard
+                block={b}
+                isSelected={selected === b.block_id}
+                onClick={() => setSelected(p => p === b.block_id ? null : b.block_id)}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Opportunity detail */}
+        {!selected ? (
+          <div className="panel" style={{ display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', minHeight: 360, gap: 14 }}>
+            <div style={{ fontSize: 36, opacity: 0.1 }}>▣</div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>Select a Block</div>
+            <div style={{ fontSize: 13, color: 'var(--text-3)', textAlign: 'center', maxWidth: 260, lineHeight: 1.7 }}>
+              Click any block card to reveal its feasible tasks and compatible combinations
+            </div>
           </div>
-        </div>
-
-        {/* Right: opportunity panel */}
-        <div>
-          {!selected ? (
-            <div className="panel" style={{ display:'flex', flexDirection:'column', alignItems:'center',
-              justifyContent:'center', minHeight:340, gap:16 }}>
-              <div style={{ fontSize:48, animation:'float 3s ease infinite' }}>⬡</div>
-              <div style={{ fontSize:16, fontWeight:700, color:'var(--text-2)' }}>Select a Block</div>
-              <div style={{ fontSize:13, color:'var(--text-3)', textAlign:'center', maxWidth:280, lineHeight:1.6 }}>
-                Click any block card to reveal its feasible tasks and compatible combinations
-              </div>
-            </div>
-          ) : (
-            <div className="panel anim-blur-up">
-              {/* Block summary */}
-              <div style={{ marginBottom:16 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-                  <span style={{ fontSize:13, fontWeight:800, fontFamily:'var(--mono)',
-                    color:C.brand, background:`${C.brand}15`, padding:'4px 12px',
-                    borderRadius:6, border:`1px solid ${C.brand}30` }}>{selected}</span>
-                  <span style={{ fontSize:11, color:'var(--text-3)' }}>
-                    {feasible.length} feasible · {combos.length} combinations
-                  </span>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {/* Block summary */}
+            <div className="panel ob-scale-in">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 800, fontFamily: 'var(--mono)',
+                    letterSpacing: '-0.02em', color: C.orange }}>{selected}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 2 }}>{selBlock?.section || '—'}</div>
                 </div>
-                {selBlock && (
-                  <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
-                    {[
-                      ['Capacity',  `${selBlock.duration||0} min`],
-                      ['Remaining', `${selBlock.remaining_capacity??selBlock.duration??0} min`],
-                      ['Type',      selBlock.block_type||'—'],
-                      ['Track',     selBlock.affected_track||'—'],
-                    ].map(([k,v])=>(
-                      <div key={k}>
-                        <div style={{ fontSize:9.5, color:'var(--text-4)' }}>{k}</div>
-                        <div style={{ fontSize:12, fontWeight:700, color:'var(--text-2)' }}>{v}</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <span className="badge badge-orange">{feasible.length} feasible</span>
+                  <span className="badge badge-gray">{combos.length} combos</span>
+                </div>
+              </div>
+              {selBlock && (
+                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                  {[
+                    ['Capacity',  `${selBlock.duration || 0} min`],
+                    ['Remaining', `${selBlock.remaining_capacity ?? selBlock.duration ?? 0} min`],
+                    ['Type',      selBlock.block_type || '—'],
+                    ['Track',     selBlock.affected_track || '—'],
+                  ].map(([k, v]) => (
+                    <div key={k}>
+                      <div style={{ fontSize: 9.5, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{k}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginTop: 2 }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Feasible task nodes */}
+            <div className="panel ob-scale-in" style={{ animationDelay: '0.05s' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.1em', color: 'var(--text-4)', marginBottom: 12,
+                display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.orange,
+                  animation: 'ob-dot-pulse 2s ease infinite' }} />
+                Feasible Tasks ({feasible.length})
+              </div>
+              {feasible.length === 0 ? (
+                <div className="empty-state" style={{ padding: '16px 0' }}>
+                  <div className="empty-icon" style={{ fontSize: 24 }}>🚫</div>
+                  <div className="empty-text">No feasible tasks for this block</div>
+                </div>
+              ) : (
+                <div className="opp-graph">
+                  {feasible.map((tid, i) => {
+                    const c = COLORS[i % COLORS.length];
+                    return (
+                      <div key={tid} className="graph-node ob-scale-in"
+                        style={{ borderColor: c, color: c, background: `${c}10`,
+                          animationDelay: `${i * 0.04}s` }}>
+                        {tid}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Feasible tasks */}
-              <div style={{ marginBottom:16 }}>
-                <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px',
-                  color:'var(--text-3)', marginBottom:10, display:'flex', alignItems:'center', gap:6 }}>
-                  <div style={{ width:6, height:6, borderRadius:'50%', background:C.brand, animation:'pulse 2.5s ease infinite' }}/>
-                  Feasible Tasks ({feasible.length})
+                    );
+                  })}
                 </div>
-                {feasible.length===0
-                  ? <div className="empty-state" style={{ padding:'20px 0' }}>
-                      <div className="empty-icon" style={{ fontSize:28 }}>🚫</div>
-                      <div className="empty-text">No feasible tasks for this block</div>
-                    </div>
-                  : <div className="opp-graph" style={{ minHeight:80 }}>
-                      {feasible.map((tid,i)=>{
-                        const c=COLORS[i%COLORS.length];
-                        return (
-                          <div key={tid} className="graph-node anim-blur-up"
-                            style={{ borderColor:c, color:c, background:`${c}12`,
-                              animationDelay:`${i*0.05}s`, minWidth:72, textAlign:'center' }}>
-                            <div style={{ fontSize:12, fontWeight:800 }}>{tid}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                }
-              </div>
-
-              {/* Compatible combinations */}
-              <div>
-                <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.8px',
-                  color:'var(--text-3)', marginBottom:10, display:'flex', alignItems:'center', gap:6 }}>
-                  <div style={{ width:6, height:6, borderRadius:'50%', background:C.green, animation:'pulse 2.5s ease infinite' }}/>
-                  Compatible Combinations ({combos.length})
-                </div>
-                {combos.length===0
-                  ? <div className="empty-state" style={{ padding:'16px 0' }}>
-                      <div className="empty-icon" style={{ fontSize:24 }}>📭</div>
-                      <div className="empty-text">No compatible combinations</div>
-                    </div>
-                  : combos.map((combo,i)=>{
-                      const tids=combo.tasks||[];
-                      return (
-                        <div key={i} className="anim-blur-up"
-                          style={{ animationDelay:`${i*0.05}s`,
-                            display:'flex', alignItems:'center', gap:10, padding:'10px 12px',
-                            borderRadius:10, background:'var(--bg-base)', border:'1px solid var(--border)',
-                            marginBottom:6, transition:'all var(--t-mid)',
-                          }}
-                          onMouseEnter={e=>{ e.currentTarget.style.borderColor=C.brand; e.currentTarget.style.transform='translateX(3px)'; }}
-                          onMouseLeave={e=>{ e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.transform='none'; }}
-                        >
-                          <span style={{ fontSize:10, fontWeight:800, color:'var(--text-4)',
-                            minWidth:20, fontFamily:'var(--mono)' }}>#{i+1}</span>
-                          <div style={{ flex:1, display:'flex', gap:5, flexWrap:'wrap' }}>
-                            {tids.map(tid=>(
-                              <span key={tid} style={{ fontSize:11.5, fontWeight:700, color:C.cyan,
-                                fontFamily:'var(--mono)', background:`${C.cyan}12`,
-                                padding:'2px 8px', borderRadius:5, border:`1px solid ${C.cyan}25` }}>
-                                {tid}
-                              </span>
-                            ))}
-                          </div>
-                          <div style={{ textAlign:'right', flexShrink:0 }}>
-                            <div style={{ fontSize:11, fontWeight:700, color:C.green, fontFamily:'var(--mono)' }}>
-                              {(combo.adjusted_value||combo.base_value||0).toFixed(1)}
-                            </div>
-                            <div style={{ fontSize:9.5, color:'var(--text-4)' }}>value</div>
-                            {combo.zero_possession && (
-                              <span style={{ fontSize:9, color:C.green, background:`${C.green}12`,
-                                padding:'1px 5px', borderRadius:4, border:`1px solid ${C.green}25`,
-                                display:'block', marginTop:2 }}>ZP ✓</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                }
-              </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* Compatible combinations */}
+            <div className="panel ob-scale-in" style={{ animationDelay: '0.1s' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.1em', color: 'var(--text-4)', marginBottom: 12,
+                display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.green,
+                  animation: 'ob-dot-pulse 2s ease infinite' }} />
+                Compatible Combinations ({combos.length})
+              </div>
+              {combos.length === 0 ? (
+                <div className="empty-state" style={{ padding: '16px 0' }}>
+                  <div className="empty-icon" style={{ fontSize: 24 }}>📭</div>
+                  <div className="empty-text">No compatible combinations</div>
+                </div>
+              ) : (
+                combos.map((combo, i) => {
+                  const tasks = combo.tasks || [];
+                  return (
+                    <div key={i} className="card-hover ob-fade-up"
+                      style={{ animationDelay: `${i * 0.04}s`,
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 12px', borderRadius: 10,
+                        background: 'var(--bg-2)', border: '1px solid var(--border)',
+                        marginBottom: 7 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-5)',
+                        minWidth: 22, fontFamily: 'var(--mono)' }}>#{i + 1}</span>
+                      <div style={{ flex: 1, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                        {tasks.map(t => (
+                          <span key={t} style={{ fontSize: 11.5, fontWeight: 700, color: C.orange,
+                            fontFamily: 'var(--mono)', background: 'var(--orange-dim)',
+                            padding: '2px 7px', borderRadius: 5, border: '1px solid var(--orange-border)' }}>
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--mono)',
+                          color: (combo.adjusted_value || 0) >= 0 ? C.green : C.red }}>
+                          {(combo.adjusted_value || 0).toFixed(1)}
+                        </div>
+                        {combo.zero_possession && (
+                          <span style={{ fontSize: 9.5, color: C.green, background: 'rgba(34,197,94,0.08)',
+                            padding: '1px 5px', borderRadius: 4, display: 'block', marginTop: 2,
+                            border: '1px solid rgba(34,197,94,0.2)' }}>ZP</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
