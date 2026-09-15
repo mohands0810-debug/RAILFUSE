@@ -50,25 +50,25 @@ RAILFUSE introduces **Opportunity-Aware Adaptive Block Planning**:
 
 | Feature | Status |
 |---------|--------|
-| Synthetic Railway Dataset (20+ tasks, 8+ blocks) | ✅ Implemented |
+| Synthetic Railway Dataset (25 tasks, 10 blocks, 24 trains) | ✅ Implemented |
 | Maintenance Debt Algorithm | ✅ Implemented |
 | Task Flexibility Scoring | ✅ Implemented |
 | Feasibility Checking (train, resource, spatial) | ✅ Implemented |
 | Opportunity Graph Construction | ✅ Implemented |
-| Compatible Task Combination | ✅ Implemented |
+| Compatible Task Combination Generator | ✅ Implemented |
 | Zero-Additional-Possession Optimizer | ✅ Implemented |
 | Future Block Protection (Look-ahead) | ✅ Implemented |
 | Opportunity Cost Analysis | ✅ Implemented |
 | Dynamic Explainability Engine | ✅ Implemented |
-| FastAPI Backend | ✅ Implemented |
-| Next.js + React Frontend | ✅ Implemented |
-| Command Center Dashboard | ✅ Implemented |
-| Maintenance Tasks View | ✅ Implemented |
-| Available Blocks View | ✅ Implemented |
-| Opportunity Engine Screen | ✅ Implemented |
-| Optimized Plan / Gantt | ✅ Implemented |
-| What-If Scenario Analysis | ✅ Implemented |
-| Automated Tests | ✅ Implemented |
+| FastAPI REST Backend (8 endpoints) | ✅ Implemented |
+| Vite + React SPA Frontend | ✅ Implemented |
+| Command Center Dashboard (live charts) | ✅ Implemented |
+| Maintenance Tasks — filterable, expandable | ✅ Implemented |
+| Block Explorer — opportunity graph inline | ✅ Implemented |
+| Opportunity Engine — combination ranking | ✅ Implemented |
+| Plan Optimizer — live weight sliders + re-run | ✅ Implemented |
+| What-If Simulator — side-by-side comparison | ✅ Implemented |
+| 79 Automated Tests (100% passing) | ✅ Implemented |
 
 ---
 
@@ -113,13 +113,13 @@ Synthetic Data Sources
   FastAPI Backend (REST API)
           │
           ▼
-  Next.js Frontend
-  ├── Command Center
-  ├── Maintenance Tasks
-  ├── Available Blocks
+  Vite + React SPA (frontend-react/)
+  ├── Command Center (live Recharts)
+  ├── Maintenance Tasks (filterable table)
+  ├── Block Explorer (opportunity graph)
   ├── Opportunity Engine ← HERO SCREEN
-  ├── Optimized Plan (Gantt)
-  └── What-If Analysis
+  ├── Plan Optimizer (weight sliders, live re-run)
+  └── What-If Simulator (scenario comparison)
 ```
 
 ---
@@ -128,13 +128,12 @@ Synthetic Data Sources
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 14, React, Tailwind CSS |
-| Backend | Python 3.12, FastAPI, Uvicorn |
-| Optimization | OR-Tools CP-SAT / Custom Heuristic |
-| Data Processing | Pandas, Pydantic |
-| Charts | Recharts |
-| Database | SQLite (dev) / PostgreSQL (production) |
-| Testing | pytest, httpx |
+| Frontend | Vite 8, React 19, Recharts, React Router v7 |
+| Backend | Python 3.12, FastAPI, Uvicorn, Pydantic v2 |
+| Optimization | Custom deterministic heuristic (no external solver) |
+| Data | Synthetic JSON dataset (25 tasks, 10 blocks, 24 trains) |
+| Charts | Recharts (BarChart, PieChart, RadarChart) |
+| Testing | pytest, httpx, FastAPI TestClient — 79 tests |
 
 ---
 
@@ -201,12 +200,13 @@ cd RAILFUSE
 # Backend Setup
 cd backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+venv\Scripts\activate      # Windows
+# source venv/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 # Frontend Setup (new terminal)
-cd frontend
+cd frontend-react
 npm install
 npm run dev
 ```
@@ -225,8 +225,8 @@ cp .env.example .env
 | Component | Command | URL |
 |-----------|---------|-----|
 | Backend API | `cd backend && uvicorn main:app --reload` | http://localhost:8000 |
-| API Docs | (auto) | http://localhost:8000/docs |
-| Frontend | `cd frontend && npm run dev` | http://localhost:3000 |
+| API Docs (Swagger) | (auto-generated) | http://localhost:8000/docs |
+| Frontend (Vite) | `cd frontend-react && npm run dev` | http://localhost:3000 |
 
 ---
 
@@ -253,13 +253,12 @@ See [`docs/API.md`](docs/API.md) for complete documentation.
 See [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md) for the complete SIH judge demonstration guide.
 
 **Quick Demo Flow:**
-1. Open Command Center → Review metrics
-2. Open Maintenance Tasks → Review debt/flexibility scores
-3. Open Available Blocks → Review capacity
-4. Click **"Run Optimization"** → Watch dynamic results
-5. Open Opportunity Engine → Select a block → See compatibility analysis
-6. Open Optimized Plan → Review Gantt chart
-7. Use What-If → Change a task → Re-run → Confirm results change
+1. Open **Command Center** → Review live stats, charts, high-debt tasks
+2. Open **Maintenance Tasks** → Filter by department, expand a row for debt analysis
+3. Open **Block Explorer** → Click a block → See the opportunity graph
+4. Open **Opportunity Engine** → Select a block → Review combination ranking
+5. Open **Plan Optimizer** → Adjust scoring weights → Click **Run Optimizer**
+6. Open **What-If Simulator** → Modify a task's severity → Run → Compare decisions
 
 ---
 
@@ -303,7 +302,6 @@ RAILFUSE/
 ├── .gitignore
 ├── .env.example
 ├── docs/
-│   ├── PROJECT_OVERVIEW.md
 │   ├── ARCHITECTURE.md
 │   ├── ALGORITHM.md
 │   ├── DATASET.md
@@ -311,28 +309,38 @@ RAILFUSE/
 │   ├── DEVELOPMENT.md
 │   ├── DEMO_GUIDE.md
 │   ├── RESEARCH_AND_ASSUMPTIONS.md
-│   ├── TESTING.md
-│   └── FINAL_VERIFICATION.md
+│   └── TESTING.md
 ├── backend/
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── models/
+│   ├── main.py             ← FastAPI app (lifespan startup)
+│   ├── config.py
+│   ├── data_loader.py
+│   ├── models/             ← Pydantic schemas
 │   ├── optimization/
-│   ├── api/
-│   └── tests/
+│   │   ├── optimizer.py    ← Main optimization pipeline
+│   │   ├── conflicts.py    ← Train/resource/spatial checks
+│   │   ├── opportunity_graph.py
+│   │   ├── intelligence.py ← Debt & flexibility scoring
+│   │   └── explainability.py
+│   ├── requirements.txt
+│   └── tests/              ← 79 pytest tests
 ├── data/
-│   ├── synthetic/
-│   └── schemas/
-├── frontend/
-│   ├── package.json
+│   └── synthetic/          ← JSON dataset files
+├── frontend-react/         ← Vite + React SPA
 │   ├── src/
-│   │   ├── app/
-│   │   ├── components/
-│   │   └── lib/
-│   └── public/
+│   │   ├── App.jsx         ← Sidebar layout + routing
+│   │   ├── api/client.js   ← Typed API client
+│   │   ├── components/UI.jsx
+│   │   ├── hooks/useApi.js
+│   │   └── pages/
+│   │       ├── Dashboard.jsx
+│   │       ├── Tasks.jsx
+│   │       ├── Blocks.jsx
+│   │       ├── Opportunities.jsx
+│   │       ├── Optimizer.jsx
+│   │       └── WhatIf.jsx
+│   └── vite.config.js
 └── scripts/
-    ├── generate_dataset.py
-    └── seed_data.py
+    └── generate_dataset.py
 ```
 
 ---
