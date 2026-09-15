@@ -1,171 +1,222 @@
 import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { api } from '../api/client';
-import { Loading, ErrorBox, Card, Badge, Tag, Bar, debtColor, flexColor } from '../components/UI';
 
-const PAGE = { padding:'28px 32px', maxWidth:1400, animation:'fadeUp 0.25s ease' };
-const H1   = { fontSize:24, fontWeight:800, background:'linear-gradient(135deg,#f1f5f9,#94a3b8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', letterSpacing:'-0.5px', marginBottom:4 };
+const COLORS = ['#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ef4444','#3b82f6'];
 
-export default function Opportunities() {
-  const [selected, setSelected] = useState(null);
-  const { data: opps, loading, error } = useApi(() => api.opportunities());
+function GraphNode({ task, index, isHighlighted, onClick }) {
+  const c = COLORS[index % COLORS.length];
+  return (
+    <div
+      className="graph-node"
+      onClick={onClick}
+      style={{
+        borderColor: c, color: c,
+        background: isHighlighted ? `${c}22` : `${c}0d`,
+        boxShadow: isHighlighted ? `0 0 16px ${c}40` : 'none',
+        transform: isHighlighted ? 'scale(1.08)' : 'scale(1)',
+        animationDelay:`${index*0.05}s`,
+        minWidth:80, textAlign:'center',
+      }}
+    >
+      <div style={{ fontSize:12, fontWeight:800 }}>{task.task_id}</div>
+      <div style={{ fontSize:9.5, opacity:0.75, marginTop:2 }}>{task.task_type?.split(' ')[0]}</div>
+      <div style={{ fontSize:9, opacity:0.5, marginTop:1, fontFamily:'var(--mono)' }}>{task.duration_hours}h</div>
+    </div>
+  );
+}
 
-  if (loading) return <div style={PAGE}><Loading text="Analyzing opportunity graph…" /></div>;
-  if (error)   return <div style={PAGE}><ErrorBox message={error} /></div>;
-
-  const best = (opps || []).filter(o => o.best_combination);
-  const totalFeasible = (opps || []).reduce((s, o) => s + (o.feasible_tasks?.length || 0), 0);
-  const totalCombos   = (opps || []).reduce((s, o) => s + (o.compatible_combinations?.length || 0), 0);
-  const zeroPoss      = (opps || []).filter(o => o.best_combination?.zero_possession).length;
+function CombCard({ combo, rank, tasks }) {
+  const taskList = Array.isArray(combo) ? combo : (combo.tasks || [combo]);
+  const taskObjs = taskList.map(id => {
+    const tid = typeof id === 'string' ? id : id.task_id;
+    return tasks?.find(t => t.task_id === tid) || { task_id: tid };
+  });
+  const totalDur = taskObjs.reduce((s,t) => s+(t.duration_hours||0), 0);
+  const topDebt  = Math.max(...taskObjs.map(t => t.maintenance_debt||0));
 
   return (
-    <div style={PAGE}>
-      <div style={{ marginBottom:24 }}>
-        <h1 style={H1}>⚡ Opportunity Engine</h1>
-        <p style={{ fontSize:14, color:'var(--text-3)' }}>Analyzes each maintenance block to find optimal task combinations using the compatibility graph</p>
+    <div className="panel anim-blur-up" style={{
+      padding:'14px 16px', marginBottom:10, cursor:'default',
+      transition:'all var(--t-mid)',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor='var(--border-bright)'; e.currentTarget.style.transform='translateX(4px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.transform='none'; }}
+    >
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+        <div style={{ width:26, height:26, borderRadius:8, background:'var(--bg-elevated)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:11, fontWeight:800, color:'var(--brand)', flexShrink:0 }}>
+          #{rank}
+        </div>
+        <div style={{ flex:1, display:'flex', gap:6, flexWrap:'wrap' }}>
+          {taskList.map(id => {
+            const tid = typeof id==='string' ? id : id.task_id;
+            const i = COLORS.length > 1 ? (parseInt(tid.replace(/\D/g,''))||0) % COLORS.length : 0;
+            return (
+              <span key={tid} style={{ fontSize:12, fontWeight:800, color:COLORS[i],
+                fontFamily:'var(--mono)', background:`${COLORS[i]}15`,
+                padding:'3px 8px', borderRadius:6, border:`1px solid ${COLORS[i]}30` }}>
+                {tid}
+              </span>
+            );
+          })}
+        </div>
+        <div style={{ textAlign:'right', flexShrink:0 }}>
+          <div style={{ fontSize:11, fontFamily:'var(--mono)', fontWeight:700, color:'var(--cyan)' }}>{totalDur}h</div>
+          <div style={{ fontSize:9.5, color:'var(--text-4)' }}>total</div>
+        </div>
       </div>
-
-      {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, marginBottom:24 }}>
-        {[
-          { label:'Blocks Analyzed',      val: (opps||[]).length,  color:'var(--cyan)'   },
-          { label:'Total Feasible Tasks', val: totalFeasible,      color:'var(--text-1)' },
-          { label:'Compatible Combos',    val: totalCombos,        color:'var(--purple)' },
-          { label:'Zero-Possession Best', val: zeroPoss,           color:'var(--green)'  },
-        ].map(s => (
-          <div key={s.label} style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:12, padding:'16px 18px' }}>
-            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:6 }}>{s.label}</div>
-            <div style={{ fontSize:26, fontWeight:800, color:s.color }}>{s.val}</div>
+      <div style={{ display:'flex', gap:'12px 20px', flexWrap:'wrap' }}>
+        {taskObjs.map(t => t.task_type && (
+          <div key={t.task_id} style={{ fontSize:11, color:'var(--text-3)' }}>
+            {t.task_id}: <span style={{ color:'var(--text-2)' }}>{t.task_type}</span>
           </div>
         ))}
-      </div>
-
-      <div style={{ display:'grid', gridTemplateColumns:'300px 1fr', gap:20 }}>
-        {/* Block List */}
-        <div>
-          <div style={{ fontSize:12, fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:10 }}>Select a Block</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-            {(opps||[]).map(o => {
-              const hasBest = !!o.best_combination;
-              const isSelected = selected === o.block_id;
-              return (
-                <button key={o.block_id} id={`opp-block-${o.block_id}`}
-                  onClick={() => setSelected(isSelected ? null : o.block_id)}
-                  style={{
-                    display:'flex', alignItems:'center', gap:10,
-                    padding:'10px 14px', borderRadius:8, textAlign:'left',
-                    background: isSelected ? 'rgba(99,102,241,0.15)' : 'var(--bg-card)',
-                    border: `1px solid ${isSelected ? '#6366f1' : 'var(--border)'}`,
-                    color:'var(--text-1)', cursor:'pointer', transition:'all 0.15s',
-                  }}
-                >
-                  <span style={{ fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)', fontWeight:600, flex:1 }}>{o.block_id}</span>
-                  <Badge color={hasBest ? '#10b981' : '#475569'}>{hasBest ? `${o.feasible_tasks.length} tasks` : 'Empty'}</Badge>
-                  {o.best_combination?.zero_possession && <span title="Zero possession" style={{ fontSize:14 }}>🟢</span>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Detail panel */}
-        <div>
-          {!selected
-            ? <div style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:12, padding:'48px 24px', textAlign:'center', color:'var(--text-3)' }}>
-                <div style={{ fontSize:36, marginBottom:12 }}>⚡</div>
-                <div style={{ fontSize:15, color:'var(--text-2)', marginBottom:6 }}>Select a block to explore its opportunity graph</div>
-                <div style={{ fontSize:13 }}>The Opportunity Engine analyzes task compatibility and block capacity to find the best combination</div>
-              </div>
-            : <OppDetail opp={(opps||[]).find(o => o.block_id === selected)} />
-          }
-        </div>
       </div>
     </div>
   );
 }
 
-function OppDetail({ opp }) {
-  if (!opp) return null;
-  const combos   = opp.compatible_combinations || [];
-  const feasible = opp.feasible_tasks || [];
-  const infeas   = opp.infeasible_tasks || [];
-  const best     = opp.best_combination;
+export default function Opportunities() {
+  const { data: opps,  loading: oLoad } = useApi(() => api.opportunities());
+  const { data: tasks, loading: tLoad } = useApi(() => api.tasks());
+  const [blockId, setBlockId] = useState('');
+  const [hoveredNode, setHoveredNode] = useState(null);
+
+  if (oLoad || tLoad) return (
+    <div className="page">
+      <div className="skeleton" style={{ height:120, borderRadius:16, marginBottom:16 }} />
+      <div className="skeleton" style={{ height:200, borderRadius:16 }} />
+    </div>
+  );
+
+  const blocks = [...new Set((opps||[]).map(o => o.block_id))].sort();
+  const activeId = blockId || blocks[0];
+  const sel = (opps||[]).find(o => o.block_id === activeId);
+
+  const taskList    = sel?.feasible_tasks || [];
+  const combos      = sel?.combinations   || [];
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-      {/* Header */}
-      <div style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:12, padding:'18px 20px' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-          <div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:16, fontWeight:700, color:'var(--accent)' }}>{opp.block_id}</div>
-            <div style={{ fontSize:12, color:'var(--text-3)', marginTop:2 }}>{opp.section} · {opp.block_duration} min block</div>
-          </div>
-          {best
-            ? <Badge color="#10b981">{best.zero_possession ? '✓ Zero Possession' : `+${best.additional_possession} min possession`}</Badge>
-            : <Badge color="#475569">No feasible tasks</Badge>}
-        </div>
+    <div className="page">
 
-        {/* Graph Nodes */}
-        <div style={{ fontSize:11, fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:8 }}>Opportunity Graph</div>
-        <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom: infeas.length ? 10 : 0 }}>
-          {feasible.map(tid => {
-            const inBest = best?.tasks?.includes(tid);
-            return (
-              <span key={tid} style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, background: inBest ? 'rgba(16,185,129,0.12)' : 'var(--bg-elevated)', border:`1px solid ${inBest ? '#10b981' : 'rgba(99,102,241,0.3)'}`, color: inBest ? '#10b981' : '#a5b4fc', transition:'all 0.15s' }}>
-                {inBest ? '★ ' : ''}{tid}
-              </span>
-            );
-          })}
-        </div>
-        {infeas.length > 0 && (
-          <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:8 }}>
-            <div style={{ width:'100%', fontSize:11, color:'var(--text-3)', marginBottom:4 }}>Infeasible ({infeas.length})</div>
-            {infeas.map(i => (
-              <span key={i.task_id} title={i.reason} style={{ padding:'5px 12px', borderRadius:20, fontSize:11, fontWeight:600, background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.2)', color:'#f87171', opacity:0.75 }}>✕ {i.task_id}</span>
-            ))}
-          </div>
-        )}
+      {/* Header */}
+      <div className="page-header anim-blur">
+        <div className="page-eyebrow">Combinatorial Analysis</div>
+        <h1 className="page-title gradient-text">Opportunity Engine</h1>
+        <p className="page-subtitle">
+          Compatible task combinations per maintenance block · {opps?.length || 0} blocks analysed
+        </p>
       </div>
 
-      {/* Best Combination */}
-      {best && (
-        <div style={{ background:'rgba(16,185,129,0.06)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:12, padding:'18px 20px' }}>
-          <div style={{ fontSize:12, fontWeight:700, color:'#10b981', textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:12 }}>★ Best Combination</div>
-          <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:12 }}>
-            {best.tasks.map(t => <Tag key={t}>{t}</Tag>)}
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
-            {[
-              ['Adjusted Value', best.adjusted_value?.toFixed(2)],
-              ['Total Duration', `${best.total_duration} min`],
-              ['Remaining After', `${best.remaining_after} min`],
-            ].map(([l,v]) => (
-              <div key={l}>
-                <div style={{ fontSize:10, color:'var(--text-3)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:3 }}>{l}</div>
-                <div style={{ fontSize:16, fontWeight:800, color:'var(--text-1)' }}>{v}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Block selector */}
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:20, alignItems:'center' }}>
+        <span style={{ fontSize:11.5, fontWeight:600, color:'var(--text-3)', textTransform:'uppercase',
+          letterSpacing:'0.6px' }}>Select Block:</span>
+        {blocks.map(id => (
+          <button key={id}
+            className={`filter-chip${activeId===id?' active':''}`}
+            onClick={() => setBlockId(id)}
+          >{id}</button>
+        ))}
+      </div>
 
-      {/* All Combos */}
-      {combos.length > 0 && (
-        <Card title="All Compatible Combinations" badge={`${combos.length}`}>
-          {combos.slice(0,8).map((c,i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 0', borderBottom:'1px solid var(--border-subtle)' }}>
-              <span style={{ fontSize:11, color:'var(--text-3)', width:18 }}>#{i+1}</span>
-              <div style={{ flex:1, display:'flex', gap:5, flexWrap:'wrap' }}>{c.tasks.map(t => <Tag key={t}>{t}</Tag>)}</div>
-              <div style={{ textAlign:'right', minWidth:110 }}>
-                <div style={{ fontFamily:'var(--mono)', fontWeight:800, fontSize:14, color:'var(--text-1)' }}>{c.adjusted_value?.toFixed(1)}</div>
-                <div style={{ fontSize:10, color:c.zero_possession ? '#10b981' : '#f59e0b' }}>
-                  {c.zero_possession ? '✓ zero poss.' : `+${c.additional_possession}m`}
-                </div>
+      {/* Stats strip for selected block */}
+      {sel && (
+        <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
+          {[
+            { label:'Feasible Tasks',   value:taskList.length,  accent:'var(--brand)' },
+            { label:'Combinations',     value:combos.length,    accent:'var(--green)' },
+            { label:'Block Capacity',   value:`${sel.block?.capacity_minutes ?? '—'} min`, accent:'var(--cyan)' },
+          ].map(item => (
+            <div key={item.label} className="anim-blur-up" style={{
+              background:'var(--bg-card)', border:'1px solid var(--border)',
+              borderRadius:'var(--r-md)', padding:'10px 16px', display:'flex', gap:10, alignItems:'center',
+              transition:'all var(--t-mid)',
+            }}>
+              <div style={{ width:4, height:30, background:item.accent, borderRadius:2 }} />
+              <div>
+                <div style={{ fontSize:18, fontWeight:800, fontFamily:'var(--mono)', color:item.accent }}>{item.value}</div>
+                <div style={{ fontSize:10.5, color:'var(--text-3)' }}>{item.label}</div>
               </div>
             </div>
           ))}
-        </Card>
+        </div>
       )}
+
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1.4fr', gap:20 }}>
+
+        {/* Left: graph */}
+        <div className="panel anim-blur-up d2">
+          <div className="panel-header">
+            <div className="panel-title">
+              <div className="panel-title-dot" />
+              Feasible Task Nodes — {activeId}
+            </div>
+            <span className="badge badge-blue">{taskList.length} nodes</span>
+          </div>
+
+          {taskList.length === 0
+            ? <div className="empty-state"><div className="empty-icon">🌐</div><div className="empty-text">No feasible tasks for this block</div></div>
+            : (
+              <div className="opp-graph" style={{ minHeight:160 }}>
+                {taskList.map((t, i) => (
+                  <GraphNode key={t.task_id} task={t} index={i}
+                    isHighlighted={hoveredNode === t.task_id}
+                    onClick={() => setHoveredNode(prev => prev===t.task_id ? null : t.task_id)}
+                  />
+                ))}
+              </div>
+            )
+          }
+
+          {taskList.length > 0 && (
+            <div style={{ marginTop:16 }}>
+              <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase',
+                letterSpacing:'0.8px', color:'var(--text-3)', marginBottom:10 }}>
+                Task Details
+              </div>
+              {taskList.map(t => {
+                const full = (tasks||[]).find(x => x.task_id === t.task_id);
+                const dept = full?.department || t.department || '—';
+                const debt = full?.maintenance_debt || 0;
+                return (
+                  <div key={t.task_id} style={{ display:'flex', gap:10, padding:'8px 0',
+                    borderBottom:'1px solid var(--border-subtle)', fontSize:12 }}>
+                    <span style={{ fontFamily:'var(--mono)', color:'var(--accent)', fontWeight:700, minWidth:60 }}>{t.task_id}</span>
+                    <span style={{ flex:1, color:'var(--text-2)' }}>{t.task_type}</span>
+                    <span className="chip">{dept}</span>
+                    <span style={{ color: debt>=40?'#ef4444':debt>=25?'#f59e0b':'#10b981',
+                      fontFamily:'var(--mono)', fontWeight:700, fontSize:11 }}>{debt.toFixed(0)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right: combinations */}
+        <div className="anim-blur-up d3">
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <div className="panel-title">
+              <div className="panel-title-dot" style={{ background:'var(--green)' }} />
+              Compatible Combinations
+            </div>
+            <span className="badge badge-green">{combos.length} found</span>
+          </div>
+
+          {combos.length === 0
+            ? <div className="empty-state panel">
+                <div className="empty-icon">🧩</div>
+                <div className="empty-text">No combinations found for this block</div>
+              </div>
+            : combos.map((combo, i) => (
+                <CombCard key={i} combo={combo} rank={i+1} tasks={tasks} />
+              ))
+          }
+        </div>
+      </div>
     </div>
   );
 }

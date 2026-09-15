@@ -1,185 +1,267 @@
-import { useState, useCallback } from 'react';
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
+import { useState } from 'react';
+import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useApi, useMutation } from '../hooks/useApi';
 import { api } from '../api/client';
-import { Loading, ErrorBox, Card, Badge, StatusBadge, Tag, Btn, ReasoningBox, Bar as ProgressBar, debtColor } from '../components/UI';
 
-const PAGE = { padding:'28px 32px', maxWidth:1400, animation:'fadeUp 0.25s ease' };
-const H1   = { fontSize:24, fontWeight:800, background:'linear-gradient(135deg,#f1f5f9,#94a3b8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', letterSpacing:'-0.5px', marginBottom:4 };
-const inp  = { background:'var(--bg-elevated)', border:'1px solid var(--border)', borderRadius:8, padding:'8px 12px', color:'var(--text-1)', fontSize:13, outline:'none', width:'100%' };
+const DEFAULT_WEIGHTS = {
+  debt_weight:        0.35,
+  flexibility_weight: 0.25,
+  safety_weight:      0.20,
+  opportunity_cost_weight: 0.10,
+  resource_efficiency_weight: 0.10,
+};
 
-export default function Optimizer() {
-  const [wMaint,  setWMaint]  = useState(2.0);
-  const [wPoss,   setWPoss]   = useState(1.5);
-  const [wDebt,   setWDebt]   = useState(3.0);
-  const [wFlex,   setWFlex]   = useState(1.0);
-  const [seed,    setSeed]    = useState(42);
-  const [plan,    setPlan]    = useState(null);
-  const [expandedTask, setExpandedTask] = useState(null);
+const WEIGHT_LABELS = {
+  debt_weight:        { label:'Debt Weight',        desc:'Prioritise high maintenance debt tasks', icon:'🔥', color:'#ef4444' },
+  flexibility_weight: { label:'Flexibility Weight', desc:'Protect low-flexibility urgent tasks',   icon:'🛡', color:'#8b5cf6' },
+  safety_weight:      { label:'Safety Weight',      desc:'Elevate safety-critical tasks',          icon:'⚠️', color:'#f59e0b' },
+  opportunity_cost_weight: { label:'Opportunity Cost', desc:'Penalise missed high-value blocks',  icon:'💎', color:'#06b6d4' },
+  resource_efficiency_weight: { label:'Resource Efficiency', desc:'Maximise crew & equipment use',icon:'⚙️', color:'#10b981' },
+};
 
-  const { data: initPlan } = useApi(() => api.optimizedPlan().catch(() => null));
-  const currentPlan = plan || initPlan;
-
-  const { mutate: runOpt, loading: running, error: runErr } = useMutation(
-    useCallback(() => api.optimize({ w_maintenance: wMaint, w_possession: wPoss, w_debt: wDebt, w_flexibility: wFlex, random_seed: seed }), [wMaint, wPoss, wDebt, wFlex, seed])
-  );
-
-  async function handleOptimize() {
-    try { const p = await runOpt(); setPlan(p); }
-    catch {}
-  }
-
-  const decisions = currentPlan?.task_decisions || {};
-  const summary   = currentPlan?.summary || {};
-  const taskList  = Object.entries(decisions);
-  const selected  = taskList.filter(([,d]) => d.status === 'SELECTED');
-  const deferred  = taskList.filter(([,d]) => d.status === 'DEFERRED');
-  const rejected  = taskList.filter(([,d]) => d.status === 'REJECTED');
-  const protected_ = taskList.filter(([,d]) => d.status === 'PROTECTED');
-
-  const radarData = [
-    { metric:'Maintenance\nBenefit', value: wMaint * 10 },
-    { metric:'Debt\nUrgency',        value: wDebt  * 10 },
-    { metric:'Flexibility',          value: wFlex  * 10 },
-    { metric:'Possession\nPenalty',  value: (3 - wPoss) * 10 },
-  ];
-
-  const slider = (label, val, setter, min, max, step) => (
-    <div style={{ marginBottom:14 }}>
-      <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:6 }}>
-        <span style={{ color:'var(--text-2)', fontWeight:600 }}>{label}</span>
-        <span style={{ fontFamily:'var(--mono)', color:'var(--text-1)', fontWeight:700 }}>{val.toFixed(1)}</span>
+function WeightSlider({ name, value, onChange }) {
+  const meta = WEIGHT_LABELS[name];
+  return (
+    <div style={{ marginBottom:20 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:16 }}>{meta.icon}</span>
+          <div>
+            <div style={{ fontSize:13, fontWeight:600, color:'var(--text-1)' }}>{meta.label}</div>
+            <div style={{ fontSize:11, color:'var(--text-3)', marginTop:1 }}>{meta.desc}</div>
+          </div>
+        </div>
+        <div style={{ fontFamily:'var(--mono)', fontSize:16, fontWeight:800,
+          color:meta.color, minWidth:42, textAlign:'right' }}>
+          {Math.round(value * 100)}
+        </div>
       </div>
-      <input type="range" min={min} max={max} step={step} value={val}
-        onChange={e => setter(parseFloat(e.target.value))}
-        style={{ width:'100%', accentColor:'#6366f1' }}
+      <input
+        type="range" min={0} max={1} step={0.01}
+        value={value}
+        onChange={e => onChange(parseFloat(e.target.value))}
+        className="rf-slider"
+        style={{ '--fill-pct': `${value*100}%` }}
       />
+      <div style={{ display:'flex', justifyContent:'space-between', fontSize:9.5,
+        color:'var(--text-4)', marginTop:3 }}>
+        <span>0</span><span>100</span>
+      </div>
     </div>
   );
+}
+
+function DecisionBadge({ decision }) {
+  const d = (decision||'').toUpperCase();
+  const map = {
+    PLANNED:'badge-green', SELECTED:'badge-green',
+    DEFERRED:'badge-amber', REJECTED:'badge-red',
+    PROTECTED:'badge-purple', PENDING:'badge-blue',
+  };
+  return <span className={`badge ${map[d]||'badge-gray'}`}>{d}</span>;
+}
+
+export default function Optimizer() {
+  const { data: plan, loading: pLoad } = useApi(() => api.optimizedPlan().catch(() => null));
+  const { mutate: runOpt, loading: running, data: result } = useMutation(
+    (cfg) => api.optimize(cfg)
+  );
+
+  const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
+  const [ranOnce, setRanOnce] = useState(false);
+
+  const displayed = result || plan;
+  const summary   = displayed?.summary || {};
+  const decisions = displayed?.task_decisions || [];
+  const assigns   = displayed?.block_assignments || [];
+
+  const setW = (key, val) => setWeights(prev => ({ ...prev, [key]: val }));
+
+  const handleRun = () => {
+    setRanOnce(true);
+    runOpt({ weights });
+  };
+
+  // Radar chart data
+  const radarData = Object.entries(weights).map(([k, v]) => ({
+    weight: WEIGHT_LABELS[k]?.label?.split(' ')[0] || k,
+    value:  Math.round(v * 100),
+    fullMark: 100,
+  }));
 
   return (
-    <div style={PAGE}>
-      <div style={{ marginBottom:24 }}>
-        <h1 style={H1}>🎯 Plan Optimizer</h1>
-        <p style={{ fontSize:14, color:'var(--text-3)' }}>Configure scoring weights and run the Opportunity-Aware Adaptive Block Planner</p>
+    <div className="page">
+
+      {/* Header */}
+      <div className="page-header anim-blur">
+        <div className="page-eyebrow">Optimization Engine</div>
+        <h1 className="page-title gradient-text">Plan Optimizer</h1>
+        <p className="page-subtitle">
+          Tune weights, re-run the heuristic in real time · Deterministic seed 42 · Results update instantly
+        </p>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'320px 1fr', gap:20 }}>
-        {/* Config Panel */}
-        <div>
-          <Card title="⚙️ Scoring Weights">
-            {slider('Maintenance Benefit', wMaint, setWMaint, 0.5, 5, 0.5)}
-            {slider('Debt Urgency',        wDebt,  setWDebt,  0.5, 5, 0.5)}
-            {slider('Flexibility',         wFlex,  setWFlex,  0.5, 5, 0.5)}
-            {slider('Possession Penalty',  wPoss,  setWPoss,  0.5, 5, 0.5)}
-            <div style={{ marginBottom:14 }}>
-              <div style={{ fontSize:12, fontWeight:600, color:'var(--text-2)', marginBottom:6 }}>Random Seed</div>
-              <input id="opt-seed" type="number" style={inp} value={seed} onChange={e => setSeed(parseInt(e.target.value)||42)} min={0} max={9999} />
-            </div>
-            {runErr && <div style={{ color:'var(--red)', fontSize:12, marginBottom:10 }}>Error: {runErr}</div>}
-            <Btn id="btn-run-optimizer" onClick={handleOptimize} loading={running} style={{ width:'100%' }}>
-              {running ? 'Optimizing…' : '▶ Run Optimizer'}
-            </Btn>
-          </Card>
+      <div style={{ display:'grid', gridTemplateColumns:'340px 1fr', gap:20 }}>
 
-          {/* Radar Chart */}
-          <Card title="📡 Weight Radar" style={{ marginTop:16 }}>
-            <ResponsiveContainer width="100%" height={180}>
-              <RadarChart data={radarData}>
-                <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                <PolarAngleAxis dataKey="metric" tick={{ fontSize:10, fill:'#475569' }} />
-                <Radar dataKey="value" stroke="#6366f1" fill="#6366f1" fillOpacity={0.25} dot />
+        {/* ── Left: Controls ─────────────────────────────────── */}
+        <div>
+          <div className="panel anim-blur-up d1" style={{ marginBottom:16 }}>
+            <div className="panel-header">
+              <div className="panel-title"><div className="panel-title-dot" />Weight Configuration</div>
+            </div>
+            {Object.entries(weights).map(([k, v]) => (
+              <WeightSlider key={k} name={k} value={v} onChange={val => setW(k, val)} />
+            ))}
+
+            <button
+              className={`btn btn-primary${running?' btn-running':''}`}
+              onClick={handleRun}
+              disabled={running}
+              style={{ width:'100%', justifyContent:'center', marginTop:4, fontSize:14, padding:'11px 0' }}
+            >
+              {running
+                ? <><span style={{ animation:'spin 1s linear infinite', display:'inline-block' }}>⟳</span> Running…</>
+                : '▶ Run Optimizer'
+              }
+            </button>
+          </div>
+
+          {/* Radar chart */}
+          <div className="panel anim-blur-up d2">
+            <div className="panel-header">
+              <div className="panel-title"><div className="panel-title-dot" />Weight Profile</div>
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <RadarChart data={radarData} margin={{ top:10, right:20, bottom:10, left:20 }}>
+                <PolarGrid stroke="rgba(255,255,255,0.06)" />
+                <PolarAngleAxis dataKey="weight" tick={{ fontSize:10, fill:'var(--text-3)' }} />
+                <Radar dataKey="value" name="Weight" fill="#6366f1" fillOpacity={0.25}
+                  stroke="#6366f1" strokeWidth={2} dot={{ r:3, fill:'#a5b4fc' }} />
+                <Tooltip
+                  contentStyle={{ background:'var(--bg-elevated)', border:'1px solid var(--border)',
+                    borderRadius:10, fontSize:12 }}
+                  formatter={v => [`${v}%`, 'Weight']}
+                />
               </RadarChart>
             </ResponsiveContainer>
-          </Card>
+          </div>
         </div>
 
-        {/* Results */}
+        {/* ── Right: Results ─────────────────────────────────── */}
         <div>
-          {!currentPlan
-            ? <div style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:12, padding:'60px 24px', textAlign:'center', color:'var(--text-3)' }}>
-                <div style={{ fontSize:40, marginBottom:12 }}>🎯</div>
-                <div style={{ fontSize:15, color:'var(--text-2)', marginBottom:6 }}>Configure weights and run the optimizer</div>
-                <div style={{ fontSize:13 }}>The heuristic planner evaluates all feasible task-block combinations using the Opportunity Engine</div>
+          {!displayed && !running ? (
+            <div className="panel" style={{ display:'flex', flexDirection:'column', alignItems:'center',
+              justifyContent:'center', minHeight:400, gap:16 }}>
+              <div style={{ fontSize:56, animation:'float 3s ease infinite' }}>⬟</div>
+              <div style={{ fontSize:18, fontWeight:700, color:'var(--text-2)' }}>Ready to Optimize</div>
+              <div style={{ fontSize:13.5, color:'var(--text-3)', textAlign:'center', maxWidth:300, lineHeight:1.7 }}>
+                Configure weights on the left, then click Run Optimizer to see the plan
               </div>
-            : <>
-              {/* Summary Cards */}
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:16 }}>
+            </div>
+          ) : running ? (
+            <div className="panel" style={{ display:'flex', flexDirection:'column', alignItems:'center',
+              justifyContent:'center', minHeight:400, gap:20 }}>
+              <div style={{ width:60, height:60, borderRadius:'50%', border:'3px solid var(--border)',
+                borderTop:'3px solid var(--brand)', animation:'spin 0.8s linear infinite' }} />
+              <div style={{ fontSize:14, color:'var(--text-2)' }}>Running optimization engine…</div>
+              <div style={{ fontSize:12, color:'var(--text-3)' }}>25 tasks × 10 blocks × 24 trains</div>
+            </div>
+          ) : (
+            <>
+              {/* Summary strip */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:16 }}>
                 {[
-                  {l:'Planned',    v:summary.planned_tasks,         c:'#10b981'},
-                  {l:'Deferred',   v:summary.deferred_tasks,        c:'#f59e0b'},
-                  {l:'Protected',  v:summary.protected_tasks,       c:'#8b5cf6'},
-                  {l:'Block Value',v:summary.total_block_value?.toFixed(1), c:'var(--accent)'},
+                  { label:'Planned',       value:summary.tasks_planned   || 0, accent:'#10b981' },
+                  { label:'Deferred',      value:summary.tasks_deferred  || 0, accent:'#f59e0b' },
+                  { label:'Rejected',      value:summary.tasks_rejected  || 0, accent:'#ef4444' },
+                  { label:'Blocks Used',   value:summary.blocks_used     || assigns.filter(a=>(a.selected_tasks||[]).length>0).length, accent:'var(--brand)' },
                 ].map(s => (
-                  <div key={s.l} style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:10, padding:'14px 16px' }}>
-                    <div style={{ fontSize:10, fontWeight:700, color:'var(--text-3)', textTransform:'uppercase', letterSpacing:'0.7px', marginBottom:4 }}>{s.l}</div>
-                    <div style={{ fontSize:22, fontWeight:800, color:s.c }}>{s.v}</div>
+                  <div key={s.label} className="stat-card anim-scale" style={{ '--card-accent':s.accent, padding:'12px 14px' }}>
+                    <div className="stat-label">{s.label}</div>
+                    <div className="stat-value" style={{ color:s.accent, fontSize:28 }}>{s.value}</div>
                   </div>
                 ))}
               </div>
 
-              {/* Plan ID */}
-              <div style={{ fontSize:12, color:'var(--text-3)', fontFamily:'var(--mono)', marginBottom:16 }}>
-                Plan: <span style={{ color:'var(--accent)' }}>{currentPlan.plan_id}</span>
-              </div>
-
-              {/* Block Assignments */}
-              <Card title="📦 Block Assignments" badge={`${currentPlan.block_assignments?.filter(b=>b.selected_tasks.length>0).length} blocks`} style={{ marginBottom:16 }}>
-                <div style={{ overflowX:'auto' }}>
-                  <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+              {/* Block assignments */}
+              {assigns.filter(a => (a.selected_tasks||[]).length > 0).length > 0 && (
+                <div className="panel anim-blur-up mb-4" style={{ marginBottom:16 }}>
+                  <div className="panel-header">
+                    <div className="panel-title"><div className="panel-title-dot" />Block Assignments</div>
+                  </div>
+                  <table className="rf-table">
                     <thead>
-                      <tr style={{ borderBottom:'1px solid var(--border)' }}>
-                        {['Block','Tasks','Value','Add. Possession','Zero Poss'].map(h => (
-                          <th key={h} style={{ padding:'8px 12px', textAlign:'left', fontSize:11, fontWeight:700, textTransform:'uppercase', color:'var(--text-3)', letterSpacing:'0.6px' }}>{h}</th>
-                        ))}
+                      <tr>
+                        <th>Block</th>
+                        <th>Tasks Assigned</th>
+                        <th>Block Value</th>
+                        <th>Zero-Possession</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(currentPlan.block_assignments||[]).filter(b=>b.selected_tasks.length>0).map(b => (
-                        <tr key={b.block_id} style={{ borderBottom:'1px solid var(--border-subtle)' }}>
-                          <td style={{ padding:'8px 12px', fontFamily:'var(--mono)', fontSize:12, color:'var(--accent)' }}>{b.block_id}</td>
-                          <td style={{ padding:'8px 12px' }}>{b.selected_tasks.map(t=><Tag key={t}>{t}</Tag>)}</td>
-                          <td style={{ padding:'8px 12px', fontFamily:'var(--mono)', fontWeight:700 }}>{b.block_value.toFixed(1)}</td>
-                          <td style={{ padding:'8px 12px' }}>
-                            {b.additional_possession > 0 ? <Badge color="#f59e0b">{b.additional_possession} min</Badge> : <Badge color="#475569">0 min</Badge>}
+                      {assigns.filter(a => (a.selected_tasks||[]).length > 0).map(a => (
+                        <tr key={a.block_id}>
+                          <td><span style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:700, color:'var(--cyan)' }}>{a.block_id}</span></td>
+                          <td>
+                            <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                              {(a.selected_tasks||[]).map(t => (
+                                <span key={t} style={{ fontSize:11, fontFamily:'var(--mono)', color:'var(--accent)',
+                                  background:'var(--cyan-bg)', padding:'2px 7px', borderRadius:4 }}>{t}</span>
+                              ))}
+                            </div>
                           </td>
-                          <td style={{ padding:'8px 12px' }}>
-                            {b.zero_possession ? <Badge color="#10b981">✓ Yes</Badge> : <Badge color="#f59e0b">No</Badge>}
+                          <td>
+                            <span style={{ fontFamily:'var(--mono)', fontWeight:700, fontSize:13,
+                              color:(a.block_value||0)>=0?'#10b981':'#ef4444' }}>
+                              {(a.block_value||0).toFixed(2)}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`badge ${a.zero_possession?'badge-green':'badge-amber'}`}>
+                              {a.zero_possession ? '✓ Yes' : '⊘ No'}
+                            </span>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </Card>
+              )}
 
-              {/* Task Decisions */}
-              <Card title="📋 Task Decisions">
-                {['SELECTED','DEFERRED','PROTECTED','REJECTED'].map(status => {
-                  const group = taskList.filter(([,d]) => d.status === status);
-                  if (!group.length) return null;
-                  const c = {SELECTED:'#10b981',DEFERRED:'#f59e0b',PROTECTED:'#8b5cf6',REJECTED:'#ef4444'}[status];
-                  const lbl = {SELECTED:'✓ Planned',DEFERRED:'⟳ Deferred',PROTECTED:'⊙ Protected',REJECTED:'✕ Rejected'}[status];
-                  return (
-                    <div key={status} style={{ marginBottom:16 }}>
-                      <div style={{ fontSize:12, fontWeight:700, color:c, marginBottom:8 }}>{lbl} ({group.length})</div>
-                      {group.map(([tid, dec]) => (
-                        <div key={tid} style={{ marginBottom:6, padding:'10px 12px', background:'var(--bg-elevated)', borderRadius:8, borderLeft:`3px solid ${c}`, cursor:'pointer' }}
-                          onClick={() => setExpandedTask(expandedTask === tid ? null : tid)}>
-                          <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom: expandedTask===tid ? 8 : 0 }}>
-                            <span style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:600, color:'var(--accent)' }}>{tid}</span>
-                            {dec.assigned_block && <span style={{ fontSize:11, color:'var(--text-3)' }}>→ {dec.assigned_block}</span>}
-                            <span style={{ marginLeft:'auto', fontSize:11, color:'var(--text-3)' }}>{expandedTask===tid ? '▲' : '▼'}</span>
-                          </div>
-                          {expandedTask === tid && <div style={{ fontSize:12, color:'var(--text-3)', lineHeight:1.6 }}>{dec.reason}</div>}
-                        </div>
+              {/* Task decisions */}
+              <div className="panel anim-blur-up d2">
+                <div className="panel-header">
+                  <div className="panel-title"><div className="panel-title-dot" />Task Decisions ({decisions.length})</div>
+                </div>
+                <div style={{ maxHeight:360, overflowY:'auto' }}>
+                  <table className="rf-table">
+                    <thead>
+                      <tr>
+                        <th>Task</th>
+                        <th>Decision</th>
+                        <th>Block</th>
+                        <th>Score</th>
+                        <th>Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {decisions.map(d => (
+                        <tr key={d.task_id}>
+                          <td><span style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:700, color:'var(--accent)' }}>{d.task_id}</span></td>
+                          <td><DecisionBadge decision={d.decision} /></td>
+                          <td><span style={{ fontFamily:'var(--mono)', fontSize:11, color:'var(--text-3)' }}>{d.assigned_block || '—'}</span></td>
+                          <td><span style={{ fontFamily:'var(--mono)', fontSize:12, fontWeight:700 }}>{d.score?.toFixed(2) ?? '—'}</span></td>
+                          <td style={{ maxWidth:220 }}>
+                            <span style={{ fontSize:11.5, color:'var(--text-2)', lineHeight:1.5 }}>{d.reason || '—'}</span>
+                          </td>
+                        </tr>
                       ))}
-                    </div>
-                  );
-                })}
-              </Card>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </>
-          }
+          )}
         </div>
       </div>
     </div>
