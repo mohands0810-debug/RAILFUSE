@@ -1,5 +1,4 @@
 /* Shared UI Components — RAILFUSE */
-import styles from './UI.module.css';
 
 // ── Helpers ──────────────────────────────────────────────────
 export const debtColor = d => d >= 40 ? '#ef4444' : d >= 25 ? '#f59e0b' : d >= 15 ? '#8b5cf6' : '#06b6d4';
