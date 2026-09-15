@@ -1,0 +1,42 @@
+import { useState, useEffect, useCallback } from 'react';
+
+// Generic data-fetching hook
+export function useApi(fetcher, deps = []) {
+  const [data, setData]     = useState(null);
+  const [loading, setLoad]  = useState(true);
+  const [error, setError]   = useState(null);
+
+  const load = useCallback(async () => {
+    setLoad(true); setError(null);
+    try { setData(await fetcher()); }
+    catch (e) { setError(e.message); }
+    finally { setLoad(false); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  useEffect(() => { load(); }, [load]);
+  return { data, loading, error, reload: load };
+}
+
+// Hook for mutation (POST/actions) with loading state
+export function useMutation(action) {
+  const [loading, setLoad] = useState(false);
+  const [error,   setErr]  = useState(null);
+  const [result,  setRes]  = useState(null);
+
+  const mutate = useCallback(async (...args) => {
+    setLoad(true); setErr(null);
+    try {
+      const res = await action(...args);
+      setRes(res);
+      return res;
+    } catch (e) {
+      setErr(e.message);
+      throw e;
+    } finally {
+      setLoad(false);
+    }
+  }, [action]);
+
+  return { mutate, loading, error, result };
+}

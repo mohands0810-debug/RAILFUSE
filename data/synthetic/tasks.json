@@ -1,0 +1,799 @@
+[
+  {
+    "task_id": "T001",
+    "asset_id": "TRK-UP-DLI-MTJ-001",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "location": "Between km 12.4 and km 18.8 (UP line)",
+    "department": "Engineering",
+    "task_type": "Track Tamping",
+    "duration": 70,
+    "severity": 4,
+    "criticality": 4,
+    "due_date": "2026-09-11",
+    "days_overdue": 6,
+    "previous_deferrals": 2,
+    "maintenance_debt": 28.5,
+    "flexibility_score": 0.6,
+    "required_resources": [
+      "R001",
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "flagman_deployed",
+      "speed_restriction_25"
+    ],
+    "preferred_time_window": "22:00-06:00",
+    "status": "PENDING",
+    "notes": "SCENARIO A: Should be SELECTED for BLK001"
+  },
+  {
+    "task_id": "T002",
+    "asset_id": "TRK-UP-DLI-MTJ-002",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "location": "Between km 19.0 and km 20.5 (UP line)",
+    "department": "Engineering",
+    "task_type": "Rail Joint Inspection",
+    "duration": 15,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-15",
+    "days_overdue": 2,
+    "previous_deferrals": 0,
+    "maintenance_debt": 10.0,
+    "flexibility_score": 0.7,
+    "required_resources": [
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "22:00-06:00",
+    "status": "PENDING",
+    "notes": "SCENARIO L: Compatible with T001 in BLK001 — combined 85 min, zero possession"
+  },
+  {
+    "task_id": "T003",
+    "asset_id": "TRK-UP-MTJ-GWL-001",
+    "asset_type": "Points & Crossings",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "location": "MTJ Station Points, km 141",
+    "department": "Engineering",
+    "task_type": "Points & Crossings Maintenance",
+    "duration": 80,
+    "severity": 4,
+    "criticality": 3,
+    "due_date": "2026-09-13",
+    "days_overdue": 4,
+    "previous_deferrals": 1,
+    "maintenance_debt": 20.5,
+    "flexibility_score": 0.5,
+    "required_resources": [
+      "R002",
+      "R008"
+    ],
+    "compatible_departments": [
+      "Engineering",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "flagman_deployed",
+      "points_clipped"
+    ],
+    "preferred_time_window": "01:00-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO C: REJECTED for BLK003 due to train 12002 at 01:40"
+  },
+  {
+    "task_id": "T004",
+    "asset_id": "TRK-DN-DLI-MTJ-003",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "location": "Between km 45 and km 52 (DN line)",
+    "department": "Engineering",
+    "task_type": "Ballast Cleaning",
+    "duration": 60,
+    "severity": 2,
+    "criticality": 2,
+    "due_date": "2026-09-17",
+    "days_overdue": 0,
+    "previous_deferrals": 0,
+    "maintenance_debt": 4.0,
+    "flexibility_score": 0.8,
+    "required_resources": [
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "01:00-05:00",
+    "status": "PENDING",
+    "notes": "General task, high flexibility"
+  },
+  {
+    "task_id": "T005",
+    "asset_id": "TRK-DN-DLI-MTJ-004",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "location": "Between km 55 and km 68 (DN line)",
+    "department": "Engineering",
+    "task_type": "Deep Screening",
+    "duration": 95,
+    "severity": 3,
+    "criticality": 4,
+    "due_date": "2026-09-14",
+    "days_overdue": 3,
+    "previous_deferrals": 1,
+    "maintenance_debt": 22.0,
+    "flexibility_score": 0.4,
+    "required_resources": [
+      "R001",
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering"
+    ],
+    "safety_requirements": [
+      "flagman_deployed",
+      "speed_restriction_25"
+    ],
+    "preferred_time_window": "01:00-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO B: Duration 95 min > BLK002 capacity 90 min — REJECTED"
+  },
+  {
+    "task_id": "T006",
+    "asset_id": "SIG-DLI-MTJ-001",
+    "asset_type": "Signal Equipment",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "location": "DLI North Cabin, km 0",
+    "department": "S&T",
+    "task_type": "Signal Relay Testing",
+    "duration": 45,
+    "severity": 3,
+    "criticality": 4,
+    "due_date": "2026-09-16",
+    "days_overdue": 1,
+    "previous_deferrals": 0,
+    "maintenance_debt": 12.5,
+    "flexibility_score": 0.55,
+    "required_resources": [
+      "R006",
+      "R012"
+    ],
+    "compatible_departments": [
+      "S&T",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "signal_isolation",
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "22:00-05:00",
+    "status": "PENDING",
+    "notes": "S&T task for DLI-MTJ section"
+  },
+  {
+    "task_id": "T007",
+    "asset_id": "OHE-DLI-MTJ-001",
+    "asset_type": "OHE (Overhead Equipment)",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "location": "Between km 8 and km 22 (UP line OHE)",
+    "department": "TRD",
+    "task_type": "OHE Stagger Correction",
+    "duration": 90,
+    "severity": 4,
+    "criticality": 4,
+    "due_date": "2026-09-12",
+    "days_overdue": 5,
+    "previous_deferrals": 2,
+    "maintenance_debt": 30.0,
+    "flexibility_score": 0.35,
+    "required_resources": [
+      "R004",
+      "R011"
+    ],
+    "compatible_departments": [
+      "TRD"
+    ],
+    "safety_requirements": [
+      "power_isolated",
+      "earthing_confirmed"
+    ],
+    "preferred_time_window": "23:00-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO D: REJECTED for BLK004 because R004 (OHE Tower Wagon) is in depot for maintenance"
+  },
+  {
+    "task_id": "T008",
+    "asset_id": "OHE-MTJ-GWL-001",
+    "asset_type": "OHE (Overhead Equipment)",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "location": "Between km 142 and km 155 (OHE)",
+    "department": "TRD",
+    "task_type": "OHE Tension Check",
+    "duration": 60,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-15",
+    "days_overdue": 2,
+    "previous_deferrals": 0,
+    "maintenance_debt": 11.0,
+    "flexibility_score": 0.6,
+    "required_resources": [
+      "R005",
+      "R011"
+    ],
+    "compatible_departments": [
+      "TRD",
+      "S&T"
+    ],
+    "safety_requirements": [
+      "power_isolated",
+      "earthing_confirmed"
+    ],
+    "preferred_time_window": "23:00-05:00",
+    "status": "PENDING",
+    "notes": "TRD task with R005 available"
+  },
+  {
+    "task_id": "T009",
+    "asset_id": "TRK-UP-MTJ-GWL-002",
+    "asset_type": "Points & Crossings",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "location": "GWL Station Points, km 305",
+    "department": "Engineering",
+    "task_type": "Points Lubrication and Adjustment",
+    "duration": 75,
+    "severity": 4,
+    "criticality": 5,
+    "due_date": "2026-09-05",
+    "days_overdue": 12,
+    "previous_deferrals": 3,
+    "maintenance_debt": 38.5,
+    "flexibility_score": 0.3,
+    "required_resources": [
+      "R002",
+      "R008"
+    ],
+    "compatible_departments": [
+      "Engineering"
+    ],
+    "safety_requirements": [
+      "flagman_deployed",
+      "points_clipped"
+    ],
+    "preferred_time_window": "22:30-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO E: Should WIN over T010 due to higher maintenance debt"
+  },
+  {
+    "task_id": "T010",
+    "asset_id": "TRK-UP-MTJ-GWL-003",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "location": "Between km 200 and km 215 (UP line)",
+    "department": "Engineering",
+    "task_type": "Track Tamping",
+    "duration": 80,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-12",
+    "days_overdue": 5,
+    "previous_deferrals": 1,
+    "maintenance_debt": 22.1,
+    "flexibility_score": 0.45,
+    "required_resources": [
+      "R002",
+      "R008"
+    ],
+    "compatible_departments": [
+      "Engineering"
+    ],
+    "safety_requirements": [
+      "flagman_deployed",
+      "speed_restriction_25"
+    ],
+    "preferred_time_window": "22:30-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO E: Should be DEFERRED in favour of T009"
+  },
+  {
+    "task_id": "T011",
+    "asset_id": "TRK-DN-MTJ-GWL-004",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "location": "Between km 155 and km 168 (DN line)",
+    "department": "Engineering",
+    "task_type": "Track Tamping",
+    "duration": 50,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-14",
+    "days_overdue": 3,
+    "previous_deferrals": 1,
+    "maintenance_debt": 16.0,
+    "flexibility_score": 0.55,
+    "required_resources": [
+      "R002"
+    ],
+    "compatible_departments": [
+      "Engineering",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "01:00-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO F: Compatible with T012 — BOTH should be SELECTED in BLK006"
+  },
+  {
+    "task_id": "T012",
+    "asset_id": "TRK-DN-MTJ-GWL-005",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "location": "Between km 168 and km 175 (DN line)",
+    "department": "Engineering",
+    "task_type": "Ballast Tamping",
+    "duration": 35,
+    "severity": 2,
+    "criticality": 3,
+    "due_date": "2026-09-16",
+    "days_overdue": 1,
+    "previous_deferrals": 0,
+    "maintenance_debt": 7.5,
+    "flexibility_score": 0.65,
+    "required_resources": [
+      "R008"
+    ],
+    "compatible_departments": [
+      "Engineering",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "01:00-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO F: Compatible with T011 — uses different resource (R008 vs R002)"
+  },
+  {
+    "task_id": "T013",
+    "asset_id": "TRK-UP-GWL-BPL-001",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "GWL-BPL",
+    "location": "Between km 310 and km 325 (UP line)",
+    "department": "Engineering",
+    "task_type": "Deep Tamping",
+    "duration": 75,
+    "severity": 4,
+    "criticality": 4,
+    "due_date": "2026-09-09",
+    "days_overdue": 8,
+    "previous_deferrals": 2,
+    "maintenance_debt": 32.0,
+    "flexibility_score": 0.4,
+    "required_resources": [
+      "R003",
+      "R009"
+    ],
+    "compatible_departments": [
+      "Engineering",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "flagman_deployed",
+      "speed_restriction_25"
+    ],
+    "preferred_time_window": "22:00-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO G: SELECTED for BLK007 — primary task, 15 min spare"
+  },
+  {
+    "task_id": "T014",
+    "asset_id": "BRG-GWL-BPL-001",
+    "asset_type": "Bridge/Structure",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "GWL-BPL",
+    "location": "Bridge at km 320.5",
+    "department": "Civil",
+    "task_type": "Bridge Deck Inspection",
+    "duration": 45,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-16",
+    "days_overdue": 1,
+    "previous_deferrals": 0,
+    "maintenance_debt": 10.5,
+    "flexibility_score": 0.6,
+    "required_resources": [
+      "R010"
+    ],
+    "compatible_departments": [
+      "Civil",
+      "Engineering"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "22:00-04:00",
+    "status": "PENDING",
+    "notes": "SCENARIO G: Adding this to BLK007 with T013 = 120 min > 90 min (additional possession = 30 min). Optimizer must decide if value justifies possession."
+  },
+  {
+    "task_id": "T015",
+    "asset_id": "TRK-UP-DLI-CNB-001",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "DLI-CNB",
+    "location": "Between km 5 and km 22 (UP line) — URGENT",
+    "department": "Engineering",
+    "task_type": "Urgent Rail Replacement",
+    "duration": 120,
+    "severity": 5,
+    "criticality": 5,
+    "due_date": "2026-08-27",
+    "days_overdue": 21,
+    "previous_deferrals": 4,
+    "maintenance_debt": 47.2,
+    "flexibility_score": 0.2,
+    "required_resources": [
+      "R001",
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering"
+    ],
+    "safety_requirements": [
+      "flagman_deployed",
+      "speed_restriction_10",
+      "engineering_supervisor"
+    ],
+    "preferred_time_window": "23:00-04:00",
+    "status": "PENDING",
+    "notes": "SCENARIO H: Highest maintenance debt. Should WIN over T016. Critical task."
+  },
+  {
+    "task_id": "T016",
+    "asset_id": "TRK-UP-DLI-CNB-002",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "DLI-CNB",
+    "location": "Between km 55 and km 70 (UP line)",
+    "department": "Engineering",
+    "task_type": "Track Tamping",
+    "duration": 90,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-12",
+    "days_overdue": 5,
+    "previous_deferrals": 1,
+    "maintenance_debt": 18.3,
+    "flexibility_score": 0.5,
+    "required_resources": [
+      "R001",
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "23:00-04:00",
+    "status": "PENDING",
+    "notes": "SCENARIO H: Should be DEFERRED in favour of T015 (lower debt)"
+  },
+  {
+    "task_id": "T017",
+    "asset_id": "SIG-DLI-CNB-001",
+    "asset_type": "Signal Equipment",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "DLI-CNB",
+    "location": "CNB North Cabin",
+    "department": "S&T",
+    "task_type": "Track Circuit Testing",
+    "duration": 60,
+    "severity": 3,
+    "criticality": 4,
+    "due_date": "2026-09-14",
+    "days_overdue": 3,
+    "previous_deferrals": 1,
+    "maintenance_debt": 16.5,
+    "flexibility_score": 0.55,
+    "required_resources": [
+      "R006",
+      "R012"
+    ],
+    "compatible_departments": [
+      "S&T",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "signal_isolation"
+    ],
+    "preferred_time_window": "23:00-05:00",
+    "status": "PENDING",
+    "notes": "S&T task — incompatible with Engineering (heavy machinery near signals)"
+  },
+  {
+    "task_id": "T018",
+    "asset_id": "SIG-CNB-ALD-001",
+    "asset_type": "Signal Equipment",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "CNB-ALD",
+    "location": "CNB-ALD Intermediate Signal at km 445",
+    "department": "S&T",
+    "task_type": "Relay Room Inspection",
+    "duration": 90,
+    "severity": 4,
+    "criticality": 4,
+    "due_date": "2026-09-10",
+    "days_overdue": 7,
+    "previous_deferrals": 3,
+    "maintenance_debt": 35.0,
+    "flexibility_score": 0.1,
+    "required_resources": [
+      "R006",
+      "R012"
+    ],
+    "compatible_departments": [
+      "S&T"
+    ],
+    "safety_requirements": [
+      "signal_isolation",
+      "relay_room_key"
+    ],
+    "preferred_time_window": "01:00-04:00",
+    "status": "PENDING",
+    "notes": "SCENARIO I: Only 1 feasible future window. Should be PROTECTED — not assigned to suboptimal block."
+  },
+  {
+    "task_id": "T019",
+    "asset_id": "SIG-CNB-ALD-002",
+    "asset_type": "Signal Equipment",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "CNB-ALD",
+    "location": "ALD Station Signal at km 635",
+    "department": "S&T",
+    "task_type": "Signal Cable Inspection",
+    "duration": 45,
+    "severity": 2,
+    "criticality": 3,
+    "due_date": "2026-09-16",
+    "days_overdue": 1,
+    "previous_deferrals": 0,
+    "maintenance_debt": 8.5,
+    "flexibility_score": 0.7,
+    "required_resources": [
+      "R007",
+      "R012"
+    ],
+    "compatible_departments": [
+      "S&T"
+    ],
+    "safety_requirements": [
+      "signal_isolation"
+    ],
+    "preferred_time_window": "01:00-04:00",
+    "status": "PENDING",
+    "notes": "Standard S&T task for BLK009"
+  },
+  {
+    "task_id": "T020",
+    "asset_id": "TRK-UP-ALD-MGS-001",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "ALD-MGS",
+    "location": "Between km 640 and km 660 (UP line)",
+    "department": "Engineering",
+    "task_type": "Track Tamping",
+    "duration": 80,
+    "severity": 4,
+    "criticality": 3,
+    "due_date": "2026-09-11",
+    "days_overdue": 6,
+    "previous_deferrals": 2,
+    "maintenance_debt": 26.5,
+    "flexibility_score": 0.35,
+    "required_resources": [
+      "R001",
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "01:00-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO J: Attractive for BLK010 but assigning now STRANDS T021. Should be DEFERRED."
+  },
+  {
+    "task_id": "T021",
+    "asset_id": "TRK-UP-ALD-MGS-002",
+    "asset_type": "Points & Crossings",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "ALD-MGS",
+    "location": "MGS Station Points, km 785",
+    "department": "Engineering",
+    "task_type": "Points Complete Overhaul",
+    "duration": 100,
+    "severity": 5,
+    "criticality": 5,
+    "due_date": "2026-09-03",
+    "days_overdue": 14,
+    "previous_deferrals": 4,
+    "maintenance_debt": 52.0,
+    "flexibility_score": 0.05,
+    "required_resources": [
+      "R001",
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering"
+    ],
+    "safety_requirements": [
+      "flagman_deployed",
+      "points_clipped",
+      "engineering_supervisor"
+    ],
+    "preferred_time_window": "01:00-05:00",
+    "status": "PENDING",
+    "notes": "SCENARIO J: ONLY feasible block is BLK010. If T020 takes BLK010, T021 has NO future window. T021 is CRITICAL — T020 should be deferred to protect T021."
+  },
+  {
+    "task_id": "T022",
+    "asset_id": "OHE-DLI-CNB-001",
+    "asset_type": "OHE (Overhead Equipment)",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "DLI-CNB",
+    "location": "Between km 80 and km 95 (OHE)",
+    "department": "TRD",
+    "task_type": "OHE Dropper Replacement",
+    "duration": 70,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-14",
+    "days_overdue": 3,
+    "previous_deferrals": 1,
+    "maintenance_debt": 14.5,
+    "flexibility_score": 0.6,
+    "required_resources": [
+      "R005",
+      "R011"
+    ],
+    "compatible_departments": [
+      "TRD"
+    ],
+    "safety_requirements": [
+      "power_isolated",
+      "earthing_confirmed"
+    ],
+    "preferred_time_window": "23:00-05:00",
+    "status": "PENDING",
+    "notes": "TRD task — incompatible with Engineering in same block"
+  },
+  {
+    "task_id": "T023",
+    "asset_id": "SIG-ALD-MGS-001",
+    "asset_type": "Signal Equipment",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "ALD-MGS",
+    "location": "MGS Station Signal Cabin",
+    "department": "S&T",
+    "task_type": "Signal Relay Adjustment",
+    "duration": 55,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-15",
+    "days_overdue": 2,
+    "previous_deferrals": 0,
+    "maintenance_debt": 9.0,
+    "flexibility_score": 0.65,
+    "required_resources": [
+      "R007",
+      "R012"
+    ],
+    "compatible_departments": [
+      "S&T"
+    ],
+    "safety_requirements": [
+      "signal_isolation"
+    ],
+    "preferred_time_window": "01:00-04:00",
+    "status": "PENDING",
+    "notes": "S&T task for ALD-MGS section"
+  },
+  {
+    "task_id": "T024",
+    "asset_id": "BRG-DLI-CNB-001",
+    "asset_type": "Bridge/Structure",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "DLI-CNB",
+    "location": "Bridge at km 120.3",
+    "department": "Civil",
+    "task_type": "Girder Inspection",
+    "duration": 40,
+    "severity": 4,
+    "criticality": 3,
+    "due_date": "2026-09-13",
+    "days_overdue": 4,
+    "previous_deferrals": 1,
+    "maintenance_debt": 18.0,
+    "flexibility_score": 0.5,
+    "required_resources": [
+      "R010"
+    ],
+    "compatible_departments": [
+      "Civil",
+      "Engineering",
+      "S&T"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "23:00-04:00",
+    "status": "PENDING",
+    "notes": "Civil bridge inspection task"
+  },
+  {
+    "task_id": "T025",
+    "asset_id": "TRK-DN-GWL-BPL-002",
+    "asset_type": "Track Geometry",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "GWL-BPL",
+    "location": "Between km 350 and km 365 (DN line)",
+    "department": "Engineering",
+    "task_type": "Track Tamping",
+    "duration": 65,
+    "severity": 3,
+    "criticality": 3,
+    "due_date": "2026-09-12",
+    "days_overdue": 5,
+    "previous_deferrals": 1,
+    "maintenance_debt": 18.5,
+    "flexibility_score": 0.55,
+    "required_resources": [
+      "R003"
+    ],
+    "compatible_departments": [
+      "Engineering",
+      "Civil"
+    ],
+    "safety_requirements": [
+      "flagman_deployed"
+    ],
+    "preferred_time_window": "22:00-05:00",
+    "status": "PENDING",
+    "notes": "Additional engineering task for GWL-BPL section"
+  }
+]

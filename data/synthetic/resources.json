@@ -1,0 +1,171 @@
+[
+  {
+    "resource_id": "R001",
+    "resource_type": "Track Tamping Machine",
+    "department": "Engineering",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T20:00:00",
+      "available_until": "2026-09-18T06:00:00",
+      "base_section": "DLI-MTJ"
+    },
+    "location": "DLI-MTJ Section, km 15",
+    "capacity": 1,
+    "description": "Multi-tie tamper for track geometry correction"
+  },
+  {
+    "resource_id": "R002",
+    "resource_type": "Track Tamping Machine",
+    "department": "Engineering",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T22:00:00",
+      "available_until": "2026-09-18T05:00:00",
+      "base_section": "MTJ-GWL"
+    },
+    "location": "MTJ-GWL Section, km 42",
+    "capacity": 1,
+    "description": "Dynamic track stabilizer"
+  },
+  {
+    "resource_id": "R003",
+    "resource_type": "Engineering Gang",
+    "department": "Engineering",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T21:00:00",
+      "available_until": "2026-09-18T06:00:00",
+      "base_section": "DLI-MTJ"
+    },
+    "location": "DLI-MTJ Section",
+    "capacity": 12,
+    "description": "Track maintenance gang (12 workers)"
+  },
+  {
+    "resource_id": "R004",
+    "resource_type": "OHE Tower Wagon",
+    "department": "TRD",
+    "availability": {
+      "available": false,
+      "available_from": "2026-09-18T20:00:00",
+      "available_until": "2026-09-19T05:00:00",
+      "base_section": "DLI-MTJ",
+      "unavailability_reason": "Scheduled maintenance at DLI depot"
+    },
+    "location": "DLI Depot",
+    "capacity": 1,
+    "description": "OHE inspection and maintenance tower wagon"
+  },
+  {
+    "resource_id": "R005",
+    "resource_type": "OHE Tower Wagon",
+    "department": "TRD",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T20:00:00",
+      "available_until": "2026-09-18T06:00:00",
+      "base_section": "MTJ-GWL"
+    },
+    "location": "MTJ Station Yard",
+    "capacity": 1,
+    "description": "OHE maintenance tower wagon"
+  },
+  {
+    "resource_id": "R006",
+    "resource_type": "Signal Testing Unit",
+    "department": "S&T",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T22:00:00",
+      "available_until": "2026-09-18T05:00:00",
+      "base_section": "DLI-MTJ"
+    },
+    "location": "DLI-MTJ Signal Cabin",
+    "capacity": 1,
+    "description": "Signal relay testing and calibration unit"
+  },
+  {
+    "resource_id": "R007",
+    "resource_type": "Signal Testing Unit",
+    "department": "S&T",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-18T00:00:00",
+      "available_until": "2026-09-18T04:00:00",
+      "base_section": "MTJ-GWL"
+    },
+    "location": "MTJ-GWL Signal Cabin",
+    "capacity": 1,
+    "description": "Track circuit testing equipment"
+  },
+  {
+    "resource_id": "R008",
+    "resource_type": "Engineering Gang",
+    "department": "Engineering",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T23:00:00",
+      "available_until": "2026-09-18T05:00:00",
+      "base_section": "MTJ-GWL"
+    },
+    "location": "MTJ-GWL Section",
+    "capacity": 10,
+    "description": "Points and crossings maintenance gang"
+  },
+  {
+    "resource_id": "R009",
+    "resource_type": "Rail Dolly",
+    "department": "Engineering",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T20:00:00",
+      "available_until": "2026-09-18T06:00:00",
+      "base_section": "DLI-MTJ"
+    },
+    "location": "DLI-MTJ Section, km 8",
+    "capacity": 2,
+    "description": "Rail transportation dolly"
+  },
+  {
+    "resource_id": "R010",
+    "resource_type": "Bridge Inspection Unit",
+    "department": "Civil",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T22:00:00",
+      "available_until": "2026-09-18T04:00:00",
+      "base_section": "GWL-BPL"
+    },
+    "location": "GWL Station",
+    "capacity": 1,
+    "description": "Hydraulic bridge inspection platform"
+  },
+  {
+    "resource_id": "R011",
+    "resource_type": "TRD Gang",
+    "department": "TRD",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T21:00:00",
+      "available_until": "2026-09-18T05:00:00",
+      "base_section": "DLI-MTJ"
+    },
+    "location": "DLI-MTJ OHE Section",
+    "capacity": 8,
+    "description": "OHE maintenance crew (8 workers)"
+  },
+  {
+    "resource_id": "R012",
+    "resource_type": "S&T Gang",
+    "department": "S&T",
+    "availability": {
+      "available": true,
+      "available_from": "2026-09-17T22:00:00",
+      "available_until": "2026-09-18T05:00:00",
+      "base_section": "DLI-MTJ"
+    },
+    "location": "DLI Station",
+    "capacity": 6,
+    "description": "Signal and telecom maintenance crew (6 workers)"
+  }
+]

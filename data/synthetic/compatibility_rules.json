@@ -1,0 +1,110 @@
+[
+  {
+    "rule_id": "CR001",
+    "department_a": "Engineering",
+    "department_b": "Engineering",
+    "compatible": true,
+    "required_conditions": [
+      "No shared heavy machinery"
+    ],
+    "safety_constraints": [
+      "flagman_on_site"
+    ],
+    "notes": "Same-department tasks can share a block if resources don't conflict"
+  },
+  {
+    "rule_id": "CR002",
+    "department_a": "Engineering",
+    "department_b": "Civil",
+    "compatible": true,
+    "required_conditions": [
+      "Spatial separation within section",
+      "No heavy machinery conflict"
+    ],
+    "safety_constraints": [
+      "flagman_on_site",
+      "speed_restriction"
+    ],
+    "notes": "Engineering and Civil can share blocks with spatial separation"
+  },
+  {
+    "rule_id": "CR003",
+    "department_a": "Engineering",
+    "department_b": "S&T",
+    "compatible": true,
+    "required_conditions": [
+      "No heavy machinery near signal equipment",
+      "Signal protection active"
+    ],
+    "safety_constraints": [
+      "flagman_on_site",
+      "signal_protection"
+    ],
+    "notes": "Engineering and S&T compatible only if tamper/machinery stays clear of signals"
+  },
+  {
+    "rule_id": "CR004",
+    "department_a": "Engineering",
+    "department_b": "TRD",
+    "compatible": false,
+    "required_conditions": [],
+    "safety_constraints": [],
+    "notes": "Engineering track work and TRD OHE work CANNOT safely coexist in the same block. Power cut required for TRD work conflicts with track machinery operations."
+  },
+  {
+    "rule_id": "CR005",
+    "department_a": "S&T",
+    "department_b": "S&T",
+    "compatible": true,
+    "required_conditions": [
+      "No conflicting signal systems"
+    ],
+    "safety_constraints": [
+      "signal_isolation"
+    ],
+    "notes": "S&T tasks can share a block"
+  },
+  {
+    "rule_id": "CR006",
+    "department_a": "S&T",
+    "department_b": "TRD",
+    "compatible": true,
+    "required_conditions": [
+      "Power isolated before S&T work near OHE",
+      "Earthing confirmed"
+    ],
+    "safety_constraints": [
+      "power_isolation",
+      "earthing_confirmed"
+    ],
+    "notes": "S&T and TRD compatible with strict power isolation protocol"
+  },
+  {
+    "rule_id": "CR007",
+    "department_a": "TRD",
+    "department_b": "TRD",
+    "compatible": true,
+    "required_conditions": [
+      "Power isolated for all TRD work",
+      "Single power cut"
+    ],
+    "safety_constraints": [
+      "power_isolation",
+      "earthing_confirmed"
+    ],
+    "notes": "TRD tasks can share a single power cut block"
+  },
+  {
+    "rule_id": "CR008",
+    "department_a": "Civil",
+    "department_b": "Civil",
+    "compatible": true,
+    "required_conditions": [
+      "No conflicting work zones"
+    ],
+    "safety_constraints": [
+      "flagman_on_site"
+    ],
+    "notes": "Civil tasks can share a block"
+  }
+]

@@ -1,0 +1,211 @@
+[
+  {
+    "block_id": "BLK001",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "start_time": "2026-09-17T22:00:00",
+    "end_time": "2026-09-17T23:30:00",
+    "duration": 90,
+    "block_type": "Engineering Block",
+    "available_resources": [
+      "R001",
+      "R003",
+      "R009"
+    ],
+    "affected_track": "UP",
+    "safety_constraints": [
+      "flagman_deployed",
+      "speed_restriction_25"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 90,
+    "notes": "SCENARIO A: T001 (70 min) fits perfectly. SCENARIO L: T001+T002 (85 min) fits with zero possession."
+  },
+  {
+    "block_id": "BLK002",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "start_time": "2026-09-17T01:00:00",
+    "end_time": "2026-09-17T02:30:00",
+    "duration": 90,
+    "block_type": "Engineering Block",
+    "available_resources": [
+      "R003",
+      "R009"
+    ],
+    "affected_track": "DN",
+    "safety_constraints": [
+      "flagman_deployed",
+      "speed_restriction_25"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 90,
+    "notes": "SCENARIO B: T005 (95 min) exceeds capacity (90 min) — REJECTED"
+  },
+  {
+    "block_id": "BLK003",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "start_time": "2026-09-18T01:00:00",
+    "end_time": "2026-09-18T02:45:00",
+    "duration": 105,
+    "block_type": "Engineering Block",
+    "available_resources": [
+      "R002",
+      "R008"
+    ],
+    "affected_track": "UP",
+    "safety_constraints": [
+      "flagman_deployed"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 105,
+    "notes": "SCENARIO C: T003 rejected due to train 12002 passing at 01:45"
+  },
+  {
+    "block_id": "BLK004",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "DLI-MTJ",
+    "start_time": "2026-09-17T23:00:00",
+    "end_time": "2026-09-18T01:00:00",
+    "duration": 120,
+    "block_type": "Power Block",
+    "available_resources": [
+      "R011"
+    ],
+    "affected_track": "BOTH",
+    "safety_constraints": [
+      "power_isolated",
+      "earthing_confirmed"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 120,
+    "notes": "SCENARIO D: T007 requires R004 (OHE Tower Wagon) — R004 is UNAVAILABLE (in depot)"
+  },
+  {
+    "block_id": "BLK005",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "start_time": "2026-09-17T22:30:00",
+    "end_time": "2026-09-18T00:30:00",
+    "duration": 120,
+    "block_type": "Engineering Block",
+    "available_resources": [
+      "R002",
+      "R008",
+      "R009"
+    ],
+    "affected_track": "UP",
+    "safety_constraints": [
+      "flagman_deployed"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 120,
+    "notes": "SCENARIO E: T009 and T010 compete. T009 has higher maintenance debt (38.5 vs 22.1)"
+  },
+  {
+    "block_id": "BLK006",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "MTJ-GWL",
+    "start_time": "2026-09-18T01:00:00",
+    "end_time": "2026-09-18T03:00:00",
+    "duration": 120,
+    "block_type": "Engineering Block",
+    "available_resources": [
+      "R002",
+      "R008",
+      "R007"
+    ],
+    "affected_track": "DN",
+    "safety_constraints": [
+      "flagman_deployed"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 120,
+    "notes": "SCENARIO F+K+L: T011 (50 min) + T012 (35 min) = 85 min total. Zero possession. COMPATIBLE COMBINATION."
+  },
+  {
+    "block_id": "BLK007",
+    "corridor": "Delhi-Mumbai Central",
+    "section": "GWL-BPL",
+    "start_time": "2026-09-18T22:00:00",
+    "end_time": "2026-09-18T23:30:00",
+    "duration": 90,
+    "block_type": "Engineering Block",
+    "available_resources": [
+      "R003",
+      "R009",
+      "R010"
+    ],
+    "affected_track": "UP",
+    "safety_constraints": [
+      "flagman_deployed",
+      "speed_restriction_10"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 90,
+    "notes": "SCENARIO G: T013 (75 min) selected — note some possession for a higher-value second task. With T013 only: 15 min spare."
+  },
+  {
+    "block_id": "BLK008",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "DLI-CNB",
+    "start_time": "2026-09-17T23:00:00",
+    "end_time": "2026-09-18T02:00:00",
+    "duration": 180,
+    "block_type": "Engineering Block",
+    "available_resources": [
+      "R001",
+      "R003",
+      "R009"
+    ],
+    "affected_track": "UP",
+    "safety_constraints": [
+      "flagman_deployed"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 180,
+    "notes": "SCENARIO H: T015 (debt 47.2) vs T016 (debt 18.3). High debt changes priority."
+  },
+  {
+    "block_id": "BLK009",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "CNB-ALD",
+    "start_time": "2026-09-18T00:00:00",
+    "end_time": "2026-09-18T02:30:00",
+    "duration": 150,
+    "block_type": "Signal Block",
+    "available_resources": [
+      "R006",
+      "R012"
+    ],
+    "affected_track": "BOTH",
+    "safety_constraints": [
+      "signal_isolation",
+      "flagman_deployed"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 150,
+    "notes": "SCENARIO I: T018 has flexibility 0.10 (only 1 future window). Protected for that future window."
+  },
+  {
+    "block_id": "BLK010",
+    "corridor": "Delhi-Howrah Eastern",
+    "section": "ALD-MGS",
+    "start_time": "2026-09-18T01:00:00",
+    "end_time": "2026-09-18T03:00:00",
+    "duration": 120,
+    "block_type": "Engineering Block",
+    "available_resources": [
+      "R001",
+      "R003"
+    ],
+    "affected_track": "UP",
+    "safety_constraints": [
+      "flagman_deployed"
+    ],
+    "existing_tasks": [],
+    "remaining_capacity": 120,
+    "notes": "SCENARIO J: T020 is attractive but assigning it strands T021 (no other feasible block). T020 deferred."
+  }
+]
