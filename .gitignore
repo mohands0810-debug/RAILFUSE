@@ -71,10 +71,14 @@ yarn-error.log*
 .yarn/install-state.gz
 .pnp.*
 
-# Next.js
+# Next.js (legacy reference — replaced by Vite+React)
 frontend/.next/
 frontend/out/
-frontend/build/
+
+# Vite + React (frontend-react/)
+frontend-react/dist/
+frontend-react/.vite/
+frontend-react/node_modules/
 
 # Secrets / Keys
 *.pem
