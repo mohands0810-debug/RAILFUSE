@@ -28,35 +28,39 @@ const NAV_GROUPS = [
   {
     section: 'Planning',
     items: [
-      { to: '/weekly',        icon: '📅', label: 'Weekly Horizon',     sub: '7-day view' },
+      { to: '/weekly',  icon: '📅', label: 'Weekly Horizon',  sub: '7-day view' },
+      { to: '/monthly', icon: '📆', label: 'Monthly Horizon', sub: '30-day view' },
     ],
   },
 ];
 
-const TICKER_ITEMS = [
-  'Smart India Hackathon 2026',
-  'PS ID SIH26027',
-  'Team Runtime Rebels',
-  'Adaptive Block Planning',
-  'Heuristic Optimizer',
-  'Deterministic Seed 42',
-  'Synthetic Data Only',
-  'FastAPI + React',
-  '25 Tasks · 10 Blocks',
-  '24 Train Movements',
-];
 
-function Ticker({ stats }) {
-  const items = stats ? [
-    `Total Tasks ${stats.total_tasks ?? 25}`,
-    `Planned ${stats.planned_tasks ?? 9}`,
-    `Deferred ${stats.deferred_tasks ?? 6}`,
-    `Blocks ${stats.available_blocks ?? 10}`,
-    `Avg Debt ${stats.avg_maintenance_debt?.toFixed(1) ?? '—'}`,
-    `High-Debt ${stats.high_debt_tasks ?? 8}`,
-    ...TICKER_ITEMS,
-  ] : TICKER_ITEMS;
+function Ticker({ trains }) {
+  // Build dynamic train alert items from live data
+  const trainItems = (trains || []).slice(0, 12).map(t => {
+    const status = t.operational_status || 'ON_TIME';
+    const icon = status === 'DELAYED' ? '⚠️' : status === 'CANCELLED' ? '🚫' : '🚂';
+    return `${icon} ${t.train_name} (${t.train_id}) · ${t.section} · Dep ${t.departure_time?.slice(11,16)} · ${status.replace('_',' ')}`;
+  });
 
+  const fallbackItems = [
+    '🚂 12001 Bhopal Rajdhani · DLI-MTJ · Dep 20:25 · ON TIME',
+    '🚂 22691 Rajdhani Express · SBC-YPR · Dep 21:00 · ON TIME',
+    '🚂 12028 KSR Bengaluru Shatabdi · MAS-SBC · Dep 05:30 · ON TIME',
+    '⚠️ 12006 Kalka Mail DN · DLI-MTJ · 02:00–01:55 · CONFLICT WINDOW',
+    '🚂 12657 KSR Bengaluru Express · SBC-MAS · Dep 23:30 · ON TIME',
+    '🚂 12210 Garib Rath · MTJ-GWL · Dep 03:00 · ON TIME',
+    '⚠️ 16022 Kaveri Express · SBC-MYS · 01:30–02:00 · CONFLICT WINDOW',
+    '🚂 12028 Shatabdi · AGB-JHS · Dep 22:00 · ON TIME',
+    '🚂 12658 Chennai Express · MAS-SBC · Dep 07:00 · ON TIME',
+    '🚂 22415 Andhra Pradesh AC · DLI-CNB · Dep 21:25 · ON TIME',
+    '⚠️ Safety Buffer: 10 min enforced around all train windows',
+    '🟠 Block BLK001: DLI-MTJ · 02:00–03:30 · Engineering Block Active',
+    '🟠 Block BLK007: SBC-MYS · 01:00–03:00 · Engineering Block Active',
+    '🔵 24 active train movements tracked across all corridors',
+  ];
+
+  const items = trainItems.length >= 6 ? trainItems : fallbackItems;
   const tripled = [...items, ...items, ...items];
 
   return (
@@ -74,14 +78,12 @@ function Ticker({ stats }) {
 }
 
 export default function App() {
-  const [apiOk, setApiOk]   = useState(null);
-  const [stats, setStats]   = useState(null);
+  const [trains, setTrains] = useState(null);
   const [banner, setBanner] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
-    api.health().then(() => setApiOk(true)).catch(() => setApiOk(false));
-    api.stats().then(setStats).catch(() => {});
+    api.trains().then(setTrains).catch(() => {});
   }, []);
 
   const bannerH = banner ? 36 : 0;
@@ -107,7 +109,7 @@ export default function App() {
       )}
 
       {/* Ticker */}
-      <Ticker stats={stats} />
+      <Ticker trains={trains} />
 
       <div className="app-body">
 
@@ -152,18 +154,10 @@ export default function App() {
             ))}
           </nav>
 
-          {/* Footer */}
+          {/* Footer — team only, no API status */}
           <div className="sidebar-footer">
-            <div className="api-status">
-              <div className="api-dot" style={{
-                background: apiOk === null ? '#444' : apiOk ? 'var(--green)' : 'var(--red)',
-                animationPlayState: apiOk === null ? 'running' : 'paused',
-              }} />
-              <span style={{ fontSize: 12 }}>
-                {apiOk === null ? 'Connecting…' : apiOk ? 'API Online' : 'API Offline'}
-              </span>
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 4 }}>Runtime Rebels</div>
+            <div style={{ fontSize: 11, color: 'var(--text-5)' }}>Runtime Rebels · SIH 2026</div>
+            <div style={{ fontSize: 10, color: 'var(--text-5)', marginTop: 2 }}>PS ID: SIH26027</div>
           </div>
         </aside>
 

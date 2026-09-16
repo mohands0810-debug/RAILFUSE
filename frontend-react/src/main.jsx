@@ -11,6 +11,7 @@ import Optimizer from './pages/Optimizer.jsx'
 import WhatIf from './pages/WhatIf.jsx'
 import Replan from './pages/Replan.jsx'
 import WeeklyPlan from './pages/WeeklyPlan.jsx'
+import MonthlyPlan from './pages/MonthlyPlan.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="whatif" element={<WhatIf />} />
           <Route path="replan" element={<Replan />} />
           <Route path="weekly" element={<WeeklyPlan />} />
+          <Route path="monthly" element={<MonthlyPlan />} />
         </Route>
       </Routes>
     </BrowserRouter>
