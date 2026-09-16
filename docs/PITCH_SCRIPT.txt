@@ -1,0 +1,227 @@
+RAILFUSE — 3-MINUTE PITCH SCRIPT
+Smart India Hackathon 2026 | PS ID: SIH26027 | Team: Runtime Rebels
+====================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 1 — THE PROBLEM  (0:00 – 0:40)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Indian Railways runs the world's largest rail network under one
+management — over 13,000 trains a day, 68,000 km of track.
+
+Keeping that infrastructure safe means maintenance teams must work
+inside "Engineering Blocks" — short windows, usually 2–4 hours at
+night, when a section of track is cleared of trains.
+
+Today, that scheduling is done manually.
+  - A maintenance manager looks at a spreadsheet.
+  - They assign tasks one by one, based on experience.
+  - They have no real-time visibility into which tasks are most
+    overdue, which windows are about to expire, or which tasks
+    from two different departments could be done simultaneously
+    in the same block.
+
+The result?
+  - High-debt tasks slip through the cracks and become safety risks.
+  - Blocks get used at 40–50% efficiency when they could be at 80%+.
+  - Every extra possession taken means one more disruption to
+    passenger train movements.
+
+The question is: can we bring intelligent, explainable automation
+to this process — without replacing the human decision-maker?
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 2 — OUR SOLUTION  (0:40 – 1:45)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+We built RAILFUSE — Opportunity-Aware Adaptive Block Planning.
+
+The core idea is simple:
+  Every maintenance block is not just a time window —
+  it is an OPPORTUNITY to fuse multiple tasks from multiple
+  departments into one possession.
+
+RAILFUSE does five things, in order, every time it runs:
+
+  1. MAINTENANCE DEBT SCORING
+     We score every pending task using a transparent formula that
+     factors in how many days it is overdue, how many times it has
+     been deferred, and how safety-critical it is. This tells us
+     WHAT needs to happen most urgently.
+
+  2. FLEXIBILITY SCORING
+     We calculate how many future blocks each task can still fit
+     into. A task with only one future option gets a protection
+     flag — it will not be bumped by a less urgent task. This
+     tells us HOW MUCH TIME we have left to act.
+
+  3. CONFLICT DETECTION
+     Before assigning anything, we check: Is there a train in this
+     section within a 10-minute safety buffer? Are the required
+     resources available? Does the task duration fit the block's
+     remaining capacity? All checks run in real time.
+
+  4. MULTI-DEPARTMENT OPPORTUNITY FUSION
+     This is our core innovation. Engineering and S&T teams rarely
+     coordinate. RAILFUSE builds a compatibility graph — which tasks
+     from different departments can share a block safely — and fuses
+     compatible tasks. One possession. Two departments. Zero extra
+     disruption.
+
+  5. FULL EXPLAINABILITY
+     Every task gets a plain-language reason:
+     "SELECTED for BLK003: maintenance debt 28.5, fused with T004
+      (S&T, compatible), 45 min remaining capacity."
+     "DEFERRED: 3 future windows available, BLK002 is a better fit."
+     No black box. Every decision can be audited.
+
+On the dashboard you can see this live —
+  - 25 maintenance tasks scored and ranked
+  - 10 blocks across 4 corridors: Delhi, Agra, Lucknow, Bengaluru
+  - 34 train movements tracked, safety buffers enforced
+  - Full optimizer output with per-task explanations
+
+And if a critical track defect is discovered at 2 AM?
+  - Go to Dynamic Re-planning
+  - Fill in the defect details
+  - Click Inject & Re-optimize
+  - In seconds, the full plan is recalculated around the emergency
+  - You see exactly which tasks moved, which block absorbed the
+    new task, and why
+
+Traditional systems would require a phone call, a manual update,
+and a new spreadsheet. RAILFUSE does it in one click.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 3 — HOW WE ARE DIFFERENT  (1:45 – 2:30)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Existing systems fall into two categories:
+
+  CATEGORY A — Manual Scheduling Tools
+  (Spreadsheets, basic IRMS modules)
+    - No scoring. No prioritization. No conflict detection.
+    - Cannot combine tasks across departments.
+    - Cannot adapt when a new emergency task arrives.
+    - The human does everything. The system just stores data.
+
+  CATEGORY B — Academic OR Commercial Optimizers
+  (General MIP solvers, generic scheduling libraries)
+    - Not built for Indian Railways' specific constraints.
+    - No concept of maintenance debt or flexibility score.
+    - No multi-department fusion logic.
+    - No explainability — output is a schedule, not a reason.
+    - Cannot do real-time replanning from a UI.
+
+RAILFUSE sits in a different space entirely:
+
+  WHAT WE DO DIFFERENTLY           WHY IT MATTERS
+  ─────────────────────────────── ─────────────────────────────────
+  Maintenance Debt formula          Quantifies urgency — no guessing
+  Flexibility Score + Protection    Prevents stranded low-flex tasks
+  Multi-Dept Compatibility Graph    Maximizes each possession's value
+  Zero-Possession Preference        Reduces disruptions to passengers
+  Real-Time Dynamic Replanning      Handles emergencies without calls
+  Per-Task Plain-Language Reasons   Builds trust with field officers
+  Weekly + Monthly Horizon View     Supports strategic capacity planning
+  103 deterministic tests           Verifiable, reproducible behavior
+
+We are not claiming to solve a problem no one has studied.
+Block scheduling, constraint satisfaction, and explainability are
+established fields. What RAILFUSE does is combine these specifically
+for the Indian Railways maintenance context — debt-aware scoring,
+cross-department fusion, and dynamic replanning — into a single,
+coherent, demonstrable workflow.
+
+That integration is our contribution.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PART 4 — CLOSING (2:30 – 3:00)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RAILFUSE is a prototype — all data is synthetic, not live IR data.
+
+But the workflow it demonstrates is real and implementable:
+
+  - The backend is a clean FastAPI service with 15 endpoints.
+  - The optimizer is deterministic, transparent, and testable.
+  - The frontend works on any browser, no installation needed.
+  - The entire system can be deployed in an hour on a government
+    cloud VM with no external dependencies.
+
+Our ask is simple:
+  Give every maintenance officer a tool that tells them
+  not just WHAT to schedule —
+  but WHY, and WHAT HAPPENS if they don't.
+
+That is RAILFUSE.
+Thank you.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUICK REFERENCE — KEY NUMBERS TO MENTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  25       Maintenance tasks in the demo dataset
+  10       Engineering blocks across 4 corridors
+  34       Train movements tracked (after Bangalore additions)
+  10 min   Safety buffer enforced around all train windows
+  103      Automated tests — all passing, all deterministic
+  Seed 42  Optimizer is fully reproducible
+  1 click  Time to inject an emergency task and get a new plan
+  4        Planning horizons: Daily, Block, Weekly, Monthly
+  0        External paid APIs or cloud AI dependencies
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIKELY JUDGE QUESTIONS — QUICK ANSWERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q: Is this connected to real Indian Railways data?
+A: No. All data is synthetic, purpose-built for this demonstration.
+   The system design is ready to plug into real IRMS data exports.
+
+Q: How is the optimizer different from a simple greedy algorithm?
+A: It is a multi-pass heuristic. Pass 1 scores and ranks all tasks.
+   Pass 2 checks conflicts. Pass 3 finds compatible combinations.
+   Pass 4 applies zero-possession preference. Pass 5 protects
+   low-flexibility tasks for future windows. A greedy algorithm
+   would just take the highest-debt task for each block without
+   considering cross-block impact or future stranding.
+
+Q: Why not use a neural network or ML model?
+A: Explainability is a hard requirement for safety-critical
+   infrastructure. A neural model cannot tell a field officer
+   WHY a task was deferred. Our rule-based heuristic with
+   transparent scoring can. We chose correctness and trust
+   over prediction accuracy.
+
+Q: What would it take to deploy this at a real division?
+A: Three things: (1) A data feed from the existing IRMS/SAP
+   system for tasks and blocks. (2) A REST API wrapper around
+   that feed. (3) This backend deployed on a divisional server.
+   The frontend runs in any browser — no client install needed.
+
+Q: How does this compare to what Railways already uses?
+A: Existing tools are primarily record-keeping systems — they
+   store what was done. RAILFUSE is a decision-support system —
+   it tells you what to do next and why. That is a fundamentally
+   different category of tool.
+
+Q: Is the optimizer scalable to thousands of tasks?
+A: The current implementation handles the SIH demonstration scale.
+   For production scale, the heuristic approach can be parallelized
+   by corridor/division, and the conflict detection can be indexed
+   for O(log n) lookups. This is a prototype; production engineering
+   would address scale.
+
+
+====================================================================
+Team: Runtime Rebels | SIH 2026 | PS ID: SIH26027
+RAILFUSE — Opportunity-Aware Adaptive Block Planning
+All data in the demo is SYNTHETIC. Not connected to live IR systems.
+====================================================================
