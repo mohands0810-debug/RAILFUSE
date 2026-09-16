@@ -88,9 +88,33 @@ function BlockCard({ block, isSelected, onClick }) {
 }
 
 export default function Blocks() {
-  const { data: blocks, loading: bLoad } = useApi(() => api.blocks());
-  const { data: opps,   loading: oLoad } = useApi(() => api.opportunities());
+  const { data: blocks, loading: bLoad, error: bErr, reload: bReload } = useApi(() => api.blocks());
+  const { data: opps,   loading: oLoad, error: oErr, reload: oReload } = useApi(() => api.opportunities());
   const [selected, setSelected] = useState(null);
+
+  const err = bErr || oErr;
+  if (err) return (
+    <div className="page">
+      <div className="ob-fade-up">
+        <div className="page-eyebrow">Maintenance Windows</div>
+        <h1 className="page-title">Block Explorer</h1>
+      </div>
+      <div style={{ padding: '20px 24px', background: 'rgba(239,68,68,0.06)',
+        border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, marginTop: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Backend Unreachable</div>
+          <div style={{ fontSize: 12, color: 'var(--text-4)' }}>{err} — make sure the backend is running on port 8000</div>
+        </div>
+        <button onClick={() => { bReload(); oReload(); }}
+          style={{ padding: '8px 18px', borderRadius: 999, border: '1px solid #ef4444',
+            background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: 12,
+            fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}>
+          ↺ Retry
+        </button>
+      </div>
+    </div>
+  );
 
   if (bLoad || oLoad) return (
     <div className="page">

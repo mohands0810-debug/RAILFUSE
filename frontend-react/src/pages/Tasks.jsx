@@ -116,7 +116,27 @@ export default function Tasks() {
       {[...Array(10)].map((_, i) => <div key={i} className="skeleton" style={{ height: 50, marginBottom: 4, borderRadius: 8 }} />)}
     </div>
   );
-  if (error) return <div className="page"><div style={{ color: C.red, padding: 20 }}>Error: {error}</div></div>;
+  if (error) return (
+    <div className="page">
+      <div className="ob-fade-up">
+        <div className="page-eyebrow">Maintenance Tasks</div>
+        <h1 className="page-title">Task Registry</h1>
+      </div>
+      <div style={{ padding: '20px 24px', background: 'rgba(239,68,68,0.06)',
+        border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, marginTop: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Backend Unreachable</div>
+          <div style={{ fontSize: 12, color: 'var(--text-4)' }}>{error} — make sure backend is running on port 8000</div>
+        </div>
+        <button onClick={() => window.location.reload()} style={{ padding: '8px 18px', borderRadius: 999,
+          border: '1px solid #ef4444', background: 'rgba(239,68,68,0.08)',
+          color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}>
+          ↺ Retry
+        </button>
+      </div>
+    </div>
+  );
 
   let rows = [...(tasks || [])];
   if (dept !== 'All')   rows = rows.filter(t => t.department === dept);

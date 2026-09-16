@@ -9,9 +9,31 @@ const C = {
 const COLORS = [C.orange, C.blue, C.green, C.amber, C.red, C.purple];
 
 export default function Opportunities() {
-  const { data: opps, loading } = useApi(() => api.opportunities());
+  const { data: opps, loading, error, reload } = useApi(() => api.opportunities());
   const [blockId, setBlockId]   = useState('');
   const [hovered, setHovered]   = useState(null);
+
+  if (error) return (
+    <div className="page">
+      <div className="ob-fade-up">
+        <div className="page-eyebrow">Combinatorial Analysis</div>
+        <h1 className="page-title">Opportunity Engine</h1>
+      </div>
+      <div style={{ padding: '20px 24px', background: 'rgba(239,68,68,0.06)',
+        border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, marginTop: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Backend Unreachable</div>
+          <div style={{ fontSize: 12, color: 'var(--text-4)' }}>{error} — make sure backend is running on port 8000</div>
+        </div>
+        <button onClick={reload} style={{ padding: '8px 18px', borderRadius: 999,
+          border: '1px solid #ef4444', background: 'rgba(239,68,68,0.08)',
+          color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}>
+          ↺ Retry
+        </button>
+      </div>
+    </div>
+  );
 
   if (loading) return (
     <div className="page">

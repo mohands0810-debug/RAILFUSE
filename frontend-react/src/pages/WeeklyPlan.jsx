@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../api/client';
 
 const C = {
@@ -172,14 +172,14 @@ export default function WeeklyPlan() {
   const [error, setError]     = useState('');
   const [expanded, setExpanded] = useState({});
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true); setError('');
     Promise.all([api.weeklyPlan(), api.tasks()])
       .then(([p, tasks]) => {
         setPlan(p);
         const tm = {};
         tasks.forEach(t => tm[t.task_id] = t);
         setTaskMap(tm);
-        // Auto-expand days with planned tasks
         const exp = {};
         p.days.forEach(d => { if (d.planned_tasks.length > 0) exp[d.date] = true; });
         setExpanded(exp);
@@ -187,6 +187,8 @@ export default function WeeklyPlan() {
       .catch(e => setError(e.message || 'Failed to load weekly plan'))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const toggleDay = (date) => setExpanded(p => ({ ...p, [date]: !p[date] }));
 
@@ -211,9 +213,18 @@ export default function WeeklyPlan() {
       )}
 
       {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.08)',
-          border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: C.red }}>
-          {error}
+        <div style={{ padding: '20px 24px', background: 'rgba(239,68,68,0.06)',
+          border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Backend Unreachable</div>
+            <div style={{ fontSize: 12, color: 'var(--text-4)' }}>{error} — make sure backend is running on port 8000</div>
+          </div>
+          <button onClick={load} style={{ padding: '8px 18px', borderRadius: 999,
+            border: '1px solid #ef4444', background: 'rgba(239,68,68,0.08)',
+            color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            ↺ Retry
+          </button>
         </div>
       )}
 

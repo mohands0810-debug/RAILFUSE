@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '../api/client';
 
 const C = {
@@ -172,12 +172,15 @@ export default function MonthlyPlan() {
   const [error, setError]    = useState('');
   const [expanded, setExpanded] = useState({ 1: true });
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true); setError('');
     buildMonthlyPlan()
       .then(setPlan)
       .catch(e => setError(e.message || 'Failed to load monthly plan'))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const toggle = (w) => setExpanded(p => ({ ...p, [w]: !p[w] }));
 
@@ -201,9 +204,18 @@ export default function MonthlyPlan() {
       )}
 
       {error && (
-        <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.08)',
-          border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: C.red }}>
-          {error}
+        <div style={{ padding: '20px 24px', background: 'rgba(239,68,68,0.06)',
+          border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>Backend Unreachable</div>
+            <div style={{ fontSize: 12, color: 'var(--text-4)' }}>{error} — make sure backend is running on port 8000</div>
+          </div>
+          <button onClick={load} style={{ padding: '8px 18px', borderRadius: 999,
+            border: '1px solid #ef4444', background: 'rgba(239,68,68,0.08)',
+            color: '#ef4444', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)' }}>
+            ↺ Retry
+          </button>
         </div>
       )}
 

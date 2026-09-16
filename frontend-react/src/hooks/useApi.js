@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Generic data-fetching hook
+// Generic data-fetching hook with auto-retry on mount
 export function useApi(fetcher, deps = []) {
   const [data, setData]     = useState(null);
   const [loading, setLoad]  = useState(true);
@@ -9,7 +9,7 @@ export function useApi(fetcher, deps = []) {
   const load = useCallback(async () => {
     setLoad(true); setError(null);
     try { setData(await fetcher()); }
-    catch (e) { setError(e.message); }
+    catch (e) { setError(e.message || 'Failed to fetch'); }
     finally { setLoad(false); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
@@ -24,7 +24,6 @@ export function useMutation(actionFn) {
   const [error,   setErr]  = useState(null);
   const [result,  setRes]  = useState(null);
 
-  // Store latest action in a ref so mutate stays stable
   const actionRef = { current: actionFn };
 
   const mutate = useCallback(async (...args) => {
@@ -34,7 +33,7 @@ export function useMutation(actionFn) {
       setRes(res);
       return res;
     } catch (e) {
-      setErr(e.message);
+      setErr(e.message || 'Request failed');
     } finally {
       setLoad(false);
     }
