@@ -350,3 +350,51 @@ def compatibility_rules():
             notes="S&T same department compatible",
         ),
     ]
+
+
+# =============================================================================
+# App-level fixtures (for test_replanning.py, test_api.py pattern)
+# =============================================================================
+
+@pytest.fixture(scope="session")
+def initialized_app():
+    """
+    Initialize the full app state once per session and return a dict
+    containing tasks, blocks, trains, resources, rules.
+    """
+    import main as app_module
+    app_module.initialize_app()
+    return {
+        "tasks": app_module.state.tasks,
+        "blocks": app_module.state.blocks,
+        "trains": app_module.state.trains,
+        "resources": app_module.state.resources,
+        "rules": app_module.state.compatibility_rules,
+    }
+
+
+@pytest.fixture(scope="session")
+def client(initialized_app):
+    """FastAPI TestClient with pre-initialized app state."""
+    from fastapi.testclient import TestClient
+    from main import app
+    return TestClient(app)
+
+
+@pytest.fixture
+def sample_replan_task():
+    """A valid critical-defect task for replanning tests."""
+    return {
+        "task_id": "REPLAN-TEST-001",
+        "corridor": "C17-DLI-MTJ",
+        "section": "DLI-MTJ",
+        "department": "Engineering",
+        "task_type": "Emergency Track Defect Repair",
+        "duration": 45,
+        "severity": 5,
+        "criticality": 5,
+        "days_overdue": 3,
+        "previous_deferrals": 0,
+        "notes": "Test injection for replanning scenario",
+    }
+

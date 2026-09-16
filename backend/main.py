@@ -32,7 +32,9 @@ from models import (
     MaintenanceTask, MaintenanceBlock, TrainMovement, Resource,
     CompatibilityRule, OptimizationConfig, OptimizedPlan,
     OpportunityAnalysis, WhatIfRequest, WhatIfResult, WhatIfComparison,
-    DashboardStats, TaskDecision
+    DashboardStats, TaskDecision,
+    ReplanTaskInput, ReplanResult, ChangedDecision,
+    AssetAvailabilityEstimate, WeeklyPlan, DayPlan,
 )
 from data_loader import load_all_data
 from optimization.optimizer import run_optimization, analyze_block_opportunities
@@ -572,6 +574,416 @@ async def what_if(request: WhatIfRequest):
         modified_plan=modified_plan,
         changed_assignments=[c for c in changed_assignments if c.changed],
         summary_delta=summary_delta,
+    )
+
+
+# =============================================================================
+# Dynamic Re-planning Endpoint
+# =============================================================================
+
+@app.post("/replan", response_model=ReplanResult, summary="Dynamic re-planning")
+async def replan(new_task: ReplanTaskInput):
+    """
+    Dynamic Re-planning: inject a new critical maintenance task and re-optimize.
+
+    This is the core RAILFUSE dynamic re-planning demonstration:
+
+    1. Accepts a new task (e.g., a critical defect just discovered)
+    2. Calculates its maintenance debt and flexibility
+    3. Adds it to the task pool
+    4. Re-runs the full optimizer
+    5. Returns the before/after plan with changed decisions and explanations
+
+    The before plan is the current cached plan.
+    The after plan is freshly recalculated with the new task included.
+
+    IMPORTANT: This temporarily adds the task to in-memory state.
+    Use POST /reset-demo to restore the original dataset.
+    """
+    require_data()
+
+    from optimization.intelligence import calculate_maintenance_debt, calculate_flexibility_score
+
+    # Check task_id doesn't collide
+    existing_ids = {t.task_id for t in state.tasks}
+    task_id = new_task.task_id
+    if task_id in existing_ids:
+        task_id = f"{task_id}-REPLAN-{datetime.now().strftime('%H%M%S')}"
+
+    # Compute maintenance_debt for the new task
+    debt = calculate_maintenance_debt(
+        days_overdue=new_task.days_overdue,
+        previous_deferrals=new_task.previous_deferrals,
+        severity=new_task.severity,
+        criticality=new_task.criticality,
+    )
+    due_date = new_task.due_date or datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+    # Build task with preliminary flex=0.5; we'll compute the real value next
+    injected_task = MaintenanceTask(
+        task_id=task_id,
+        asset_id=new_task.asset_id,
+        asset_type=new_task.asset_type,
+        corridor=new_task.corridor,
+        section=new_task.section,
+        location=new_task.location or new_task.section,
+        department=new_task.department,
+        task_type=new_task.task_type,
+        duration=new_task.duration,
+        severity=new_task.severity,
+        criticality=new_task.criticality,
+        due_date=due_date,
+        days_overdue=new_task.days_overdue,
+        previous_deferrals=new_task.previous_deferrals,
+        maintenance_debt=round(debt, 2),
+        flexibility_score=0.5,
+        required_resources=new_task.required_resources,
+        compatible_departments=new_task.compatible_departments,
+        safety_requirements=new_task.safety_requirements,
+        preferred_time_window=new_task.preferred_time_window,
+        status="PENDING",
+        notes=new_task.notes,
+    )
+
+    # Compute real flexibility score (requires a full MaintenanceTask object)
+    flex = calculate_flexibility_score(
+        task=injected_task,
+        future_blocks=state.blocks,
+        trains=state.trains,
+        resources=state.resources,
+        compatibility_rules=state.compatibility_rules,
+    )
+    injected_task.flexibility_score = round(flex, 3)
+
+    # Capture the before plan
+    opt_config = OptimizationConfig(random_seed=config.OPTIMIZER_SEED)
+    if state.current_plan is None:
+        before_plan = run_optimization(
+            tasks=deepcopy(state.tasks),
+            blocks=deepcopy(state.blocks),
+            trains=state.trains,
+            resources=state.resources,
+            compatibility_rules=state.compatibility_rules,
+            config=opt_config,
+        )
+    else:
+        before_plan = state.current_plan
+
+    # Build augmented task list with the new task inserted at the front
+    # (high priority tasks should be evaluated first)
+    augmented_tasks = [injected_task] + deepcopy(state.tasks)
+
+    try:
+        after_plan = run_optimization(
+            tasks=augmented_tasks,
+            blocks=deepcopy(state.blocks),
+            trains=state.trains,
+            resources=state.resources,
+            compatibility_rules=state.compatibility_rules,
+            config=opt_config,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Re-planning error: {str(e)}")
+
+    # Update state with new plan and persist the injected task
+    state.tasks.append(injected_task)
+    state.current_plan = after_plan
+
+    # Diff the decisions
+    before_decisions = before_plan.task_decisions
+    after_decisions = after_plan.task_decisions
+    all_ids = set(before_decisions.keys()) | set(after_decisions.keys())
+
+    changed = []
+    for tid in all_ids:
+        b = before_decisions.get(tid)
+        a = after_decisions.get(tid)
+        b_status = b.status if b else "NOT_IN_PLAN"
+        a_status = a.status if a else "NOT_IN_PLAN"
+        if b_status != a_status:
+            changed.append(ChangedDecision(
+                task_id=tid,
+                before_status=b_status,
+                after_status=a_status,
+                before_block=b.assigned_block if b else None,
+                after_block=a.assigned_block if a else None,
+                before_reason=b.reason[:120] if b else "",
+                after_reason=a.reason[:120] if a else "",
+            ))
+
+    new_task_decision = after_decisions.get(task_id)
+
+    # Summary delta
+    b_sum = before_plan.summary
+    a_sum = after_plan.summary
+    summary_delta = {
+        "planned_tasks_change": a_sum.planned_tasks - b_sum.planned_tasks,
+        "deferred_tasks_change": a_sum.deferred_tasks - b_sum.deferred_tasks,
+        "total_value_change": round(a_sum.total_block_value - b_sum.total_block_value, 2),
+        "additional_possession_change": a_sum.total_additional_possession - b_sum.total_additional_possession,
+        "tasks_changed_count": len(changed),
+    }
+
+    # Human-readable narrative
+    new_status = new_task_decision.status if new_task_decision else "NOT_EVALUATED"
+    new_block = new_task_decision.assigned_block if new_task_decision else None
+    narrative_parts = [
+        f"New critical task '{task_id}' (dept: {new_task.department}, "
+        f"severity: {new_task.severity}/5, debt: {debt:.1f}) was injected into the planning horizon.",
+        f"Re-optimization result: task was {new_status}" +
+        (f" → assigned to block {new_block}." if new_block else "."),
+        f"{len(changed)} existing task decision(s) changed as a result of re-planning.",
+    ]
+    if summary_delta["planned_tasks_change"] > 0:
+        narrative_parts.append(
+            f"Net effect: {summary_delta['planned_tasks_change']} more tasks planned."
+        )
+    elif summary_delta["planned_tasks_change"] < 0:
+        narrative_parts.append(
+            f"Net effect: {abs(summary_delta['planned_tasks_change'])} tasks displaced by the critical task."
+        )
+
+    return ReplanResult(
+        replan_id=f"REPLAN-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+        generated_at=datetime.now().isoformat(),
+        added_task=injected_task,
+        before_plan=before_plan,
+        after_plan=after_plan,
+        changed_decisions=changed,
+        new_task_decision=new_task_decision,
+        summary_delta=summary_delta,
+        narrative=" ".join(narrative_parts),
+    )
+
+
+@app.post("/reset-demo", summary="Reset dataset to original")
+async def reset_demo():
+    """
+    Reset the in-memory dataset to the original synthetic data.
+
+    Use this after dynamic re-planning demos to restore the original state.
+    """
+    initialize_app()
+    return {
+        "status": "reset",
+        "tasks": len(state.tasks),
+        "message": "Dataset restored to original synthetic data.",
+    }
+
+
+# =============================================================================
+# Asset Availability Endpoint
+# =============================================================================
+
+@app.get("/asset-availability", response_model=list, summary="Asset availability estimates")
+async def get_asset_availability(
+    department: Optional[str] = Query(None, description="Filter by department"),
+    min_risk: Optional[str] = Query(None, description="Filter by min risk level: LOW, MEDIUM, HIGH, CRITICAL"),
+):
+    """
+    **Prototype Asset Availability Estimates.**
+
+    Returns a prototype-level estimate of asset availability based on:
+    - Outstanding maintenance debt
+    - Number of critical/high severity tasks
+    - Task overdue days
+
+    **DISCLAIMER**: This is a RAILFUSE SIH 2026 prototype estimate.
+    It is NOT an official Indian Railways asset health metric or prediction.
+    Formula: availability_pct = max(0, 100 - maintenance_debt * 1.5 - critical_tasks * 5)
+    """
+    require_data()
+
+    RISK_RANK = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
+
+    # Group tasks by asset
+    asset_map: dict = {}
+    for task in state.tasks:
+        aid = task.asset_id
+        if aid not in asset_map:
+            asset_map[aid] = {
+                "asset_id": aid,
+                "asset_type": task.asset_type,
+                "section": task.section,
+                "department": task.department,
+                "tasks": [],
+            }
+        asset_map[aid]["tasks"].append(task)
+
+    results = []
+    for aid, info in asset_map.items():
+        if department and info["department"].lower() != department.lower():
+            continue
+        tasks = info["tasks"]
+        total_debt = sum(t.maintenance_debt for t in tasks)
+        critical_tasks = sum(1 for t in tasks if t.severity >= 4 or t.criticality >= 4)
+        max_overdue = max((t.days_overdue for t in tasks), default=0)
+
+        # Prototype formula (transparent, labeled)
+        availability_pct = max(0.0, 100.0 - (total_debt * 0.8) - (critical_tasks * 4.0))
+        availability_pct = min(100.0, round(availability_pct, 1))
+
+        if availability_pct >= 80:
+            risk = "LOW"
+        elif availability_pct >= 60:
+            risk = "MEDIUM"
+        elif availability_pct >= 40:
+            risk = "HIGH"
+        else:
+            risk = "CRITICAL"
+
+        if min_risk and RISK_RANK.get(risk, 0) < RISK_RANK.get(min_risk.upper(), 0):
+            continue
+
+        notes_parts = []
+        if total_debt > 30:
+            notes_parts.append(f"High cumulative debt ({total_debt:.1f}).")
+        if critical_tasks > 0:
+            notes_parts.append(f"{critical_tasks} critical/high-severity task(s) pending.")
+        if max_overdue > 7:
+            notes_parts.append(f"Tasks overdue by up to {max_overdue} days.")
+
+        results.append(AssetAvailabilityEstimate(
+            asset_id=aid,
+            asset_type=info["asset_type"],
+            section=info["section"],
+            department=info["department"],
+            availability_pct=availability_pct,
+            maintenance_debt=round(total_debt, 1),
+            outstanding_critical_tasks=critical_tasks,
+            risk_level=risk,
+            notes=" ".join(notes_parts) if notes_parts else "No significant issues detected.",
+        ).model_dump())
+
+    # Sort by availability ascending (worst first)
+    results.sort(key=lambda r: r["availability_pct"])
+    return results
+
+
+# =============================================================================
+# Weekly Planning Endpoint
+# =============================================================================
+
+@app.get("/weekly-plan", response_model=WeeklyPlan, summary="Weekly planning horizon")
+async def get_weekly_plan():
+    """
+    Generate an optimized maintenance plan across the full 7-day block horizon.
+
+    Groups existing maintenance blocks by calendar day and runs the full
+    optimization engine across all blocks.
+
+    Returns:
+    - Day-by-day breakdown of planned/deferred tasks
+    - Per-day block utilization and capacity
+    - Overall weekly summary
+
+    This REUSES the existing optimization engine — no separate weekly algorithm.
+    Same constraints, same opportunity graph, same explainability.
+    """
+    require_data()
+
+    from datetime import date
+    import calendar
+
+    opt_config = OptimizationConfig(random_seed=config.OPTIMIZER_SEED)
+
+    try:
+        full_plan = run_optimization(
+            tasks=deepcopy(state.tasks),
+            blocks=deepcopy(state.blocks),
+            trains=state.trains,
+            resources=state.resources,
+            compatibility_rules=state.compatibility_rules,
+            config=opt_config,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Weekly planning error: {str(e)}")
+
+    # Group blocks by date
+    block_map = {b.block_id: b for b in state.blocks}
+    task_map = {t.task_id: t for t in state.tasks}
+    assignment_map = {a.block_id: a for a in full_plan.block_assignments}
+
+    day_map: dict = {}
+    for block in state.blocks:
+        try:
+            dt_str = block.start_time[:10]  # YYYY-MM-DD
+            if dt_str not in day_map:
+                day_map[dt_str] = []
+            day_map[dt_str].append(block)
+        except Exception:
+            continue
+
+    days = []
+    all_dates = sorted(day_map.keys())
+    horizon_start = all_dates[0] if all_dates else ""
+    horizon_end = all_dates[-1] if all_dates else ""
+
+    for date_str in all_dates:
+        day_blocks = day_map[date_str]
+        try:
+            d = date.fromisoformat(date_str)
+            day_name = calendar.day_name[d.weekday()]
+        except Exception:
+            day_name = date_str
+
+        planned_tasks, deferred_tasks = [], []
+        total_cap = sum(b.duration for b in day_blocks)
+        used_cap = 0
+        add_poss = 0
+        zero_poss = 0
+        depts = set()
+        day_value = 0.0
+
+        for block in day_blocks:
+            a = assignment_map.get(block.block_id)
+            if a:
+                planned_tasks.extend(a.selected_tasks)
+                deferred_tasks.extend(a.deferred_tasks)
+                add_poss += a.additional_possession
+                if a.zero_possession and a.selected_tasks:
+                    zero_poss += 1
+                day_value += a.block_value
+                for tid in a.selected_tasks:
+                    if tid in task_map:
+                        used_cap += task_map[tid].duration
+                        depts.add(task_map[tid].department)
+
+        util = round((used_cap / max(total_cap, 1)) * 100, 1)
+
+        days.append(DayPlan(
+            date=date_str,
+            day_name=day_name,
+            blocks=[b.block_id for b in day_blocks],
+            planned_tasks=planned_tasks,
+            deferred_tasks=deferred_tasks,
+            total_capacity_minutes=total_cap,
+            used_capacity_minutes=used_cap,
+            block_utilization_pct=util,
+            additional_possession_minutes=add_poss,
+            zero_possession_blocks=zero_poss,
+            departments_covered=sorted(depts),
+            block_value=round(day_value, 2),
+        ))
+
+    total_planned = sum(len(d.planned_tasks) for d in days)
+    total_deferred = sum(len(d.deferred_tasks) for d in days)
+    total_cap_all = sum(d.total_capacity_minutes for d in days)
+    total_used_all = sum(d.used_capacity_minutes for d in days)
+    total_poss = sum(d.additional_possession_minutes for d in days)
+    avg_util = round((total_used_all / max(total_cap_all, 1)) * 100, 1)
+
+    return WeeklyPlan(
+        plan_id=f"WEEKLY-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+        generated_at=datetime.now().isoformat(),
+        horizon_start=horizon_start,
+        horizon_end=horizon_end,
+        days=days,
+        full_plan=full_plan,
+        total_tasks_planned=total_planned,
+        total_tasks_deferred=total_deferred,
+        total_block_utilization_pct=avg_util,
+        total_additional_possession=total_poss,
     )
 
 

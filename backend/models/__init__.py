@@ -267,6 +267,123 @@ class WhatIfResult(BaseModel):
     summary_delta: Dict[str, Any] = {}
 
 
+
+# =============================================================================
+# Dynamic Re-planning Models
+# =============================================================================
+
+class ReplanTaskInput(BaseModel):
+    """New task to inject for dynamic re-planning."""
+    task_id: str = Field(description="Unique task ID (must not already exist)")
+    asset_id: str = "ASSET-NEW"
+    asset_type: str = "Track"
+    corridor: str
+    section: str
+    location: str = ""
+    department: str
+    task_type: str
+    duration: int = Field(ge=5, le=300, description="Duration in minutes")
+    severity: int = Field(ge=1, le=5, default=5)
+    criticality: int = Field(ge=1, le=5, default=5)
+    due_date: str = ""
+    days_overdue: int = 0
+    previous_deferrals: int = 0
+    required_resources: List[str] = []
+    compatible_departments: List[str] = []
+    safety_requirements: List[str] = []
+    preferred_time_window: str = "22:00-06:00"
+    notes: str = "Injected via dynamic re-planning"
+
+
+class ChangedDecision(BaseModel):
+    """A task decision that changed between before and after replanning."""
+    task_id: str
+    before_status: str
+    after_status: str
+    before_block: Optional[str] = None
+    after_block: Optional[str] = None
+    before_reason: str = ""
+    after_reason: str = ""
+
+
+class ReplanResult(BaseModel):
+    """Result of a dynamic re-planning run."""
+    replan_id: str
+    generated_at: str
+    added_task: MaintenanceTask
+    before_plan: OptimizedPlan
+    after_plan: OptimizedPlan
+    changed_decisions: List[ChangedDecision] = []
+    new_task_decision: Optional[TaskDecision] = None
+    summary_delta: Dict[str, Any] = {}
+    narrative: str = ""
+
+
+# =============================================================================
+# Asset Availability Models
+# =============================================================================
+
+class AssetAvailabilityEstimate(BaseModel):
+    """
+    Prototype estimate of asset availability.
+
+    DISCLAIMER: This is a RAILFUSE prototype-level estimate based on
+    maintenance debt and outstanding tasks. It is NOT an official Indian
+    Railways asset health or availability metric.
+    """
+    asset_id: str
+    asset_type: str
+    section: str
+    department: str
+    availability_pct: float = Field(description="Estimated availability 0-100%")
+    maintenance_debt: float
+    outstanding_critical_tasks: int
+    risk_level: str  # LOW, MEDIUM, HIGH, CRITICAL
+    notes: str = ""
+    disclaimer: str = (
+        "Prototype Asset Availability Estimate — RAILFUSE SIH 2026. "
+        "Not an official Indian Railways metric."
+    )
+
+
+# =============================================================================
+# Weekly Planning Models
+# =============================================================================
+
+class DayPlan(BaseModel):
+    """Optimized plan for a single calendar day."""
+    date: str  # YYYY-MM-DD
+    day_name: str  # Monday, Tuesday, etc.
+    blocks: List[str] = []           # block_ids on this day
+    planned_tasks: List[str] = []    # task_ids planned
+    deferred_tasks: List[str] = []   # task_ids deferred
+    total_capacity_minutes: int = 0
+    used_capacity_minutes: int = 0
+    block_utilization_pct: float = 0.0
+    additional_possession_minutes: int = 0
+    zero_possession_blocks: int = 0
+    departments_covered: List[str] = []
+    block_value: float = 0.0
+
+
+class WeeklyPlan(BaseModel):
+    """Optimized plan across a 7-day horizon."""
+    plan_id: str
+    generated_at: str
+    horizon_start: str
+    horizon_end: str
+    days: List[DayPlan] = []
+    full_plan: OptimizedPlan
+    total_tasks_planned: int = 0
+    total_tasks_deferred: int = 0
+    total_block_utilization_pct: float = 0.0
+    total_additional_possession: int = 0
+    disclaimer: str = (
+        "RAILFUSE Weekly Plan — Synthetic demonstration data only. "
+        "Not connected to live Indian Railways systems."
+    )
+
+
 class DashboardStats(BaseModel):
     """Stats for the command center dashboard."""
     total_tasks: int = 0

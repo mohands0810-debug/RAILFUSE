@@ -48,6 +48,8 @@
   --r-xl: 20px;
   --r-pill: 9999px;
 
+  --bg-card-hover: #141414;
+
   /* Transitions — clean, no spring */
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --t-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -783,3 +785,82 @@ input, select, textarea { font-family: inherit; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   FORM INPUTS — rf-input, rf-select
+   ══════════════════════════════════════════════════════════════ */
+.rf-input {
+  background: var(--bg-card-2, #111);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-sm);
+  color: var(--text-1);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color var(--t-fast, 0.15s);
+  width: 100%;
+  box-sizing: border-box;
+}
+.rf-input::placeholder { color: var(--text-5); }
+.rf-input:focus { border-color: rgba(249,115,22,0.4); }
+
+.rf-select {
+  background: var(--bg-card-2, #111);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-sm);
+  color: var(--text-1);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--t-fast, 0.15s);
+  width: 100%;
+  box-sizing: border-box;
+}
+.rf-select:focus { border-color: rgba(249,115,22,0.4); }
+.rf-select option { background: #111; }
+
+/* ══════════════════════════════════════════════════════════════
+   SPINNER
+   ══════════════════════════════════════════════════════════════ */
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--border-2);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUTTON STATES
+   ══════════════════════════════════════════════════════════════ */
+.btn-running {
+  background: var(--bg-card-2, #111) !important;
+  color: var(--orange) !important;
+  border-color: var(--orange-border) !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ADDITIONAL BADGE VARIANTS
+   ══════════════════════════════════════════════════════════════ */
+.badge-gray {
+  color: var(--text-3);
+  background: rgba(136,136,136,0.08);
+  border-color: rgba(136,136,136,0.18);
+}
+.badge-purple {
+  color: var(--purple);
+  background: var(--purple-dim);
+  border-color: rgba(168,85,247,0.25);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HOVER BG
+   ══════════════════════════════════════════════════════════════ */
+.bg-card-hover:hover { background: var(--bg-card-2); }
+

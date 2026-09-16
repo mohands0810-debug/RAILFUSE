@@ -53,7 +53,8 @@ function ScenarioPanel({ plan, accentColor, loading }) {
   const assigns = (plan.block_assignments || []).filter(
     a => a.combination_details?.combination?.tasks?.length > 0
   );
-  const decisions = plan.decisions ? Object.values(plan.decisions) : [];
+  // API returns task_decisions (not decisions)
+  const decisions = plan.task_decisions ? Object.values(plan.task_decisions) : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -157,17 +158,36 @@ export default function WhatIf() {
   const removeMod = i => setMods(p => p.filter((_, j) => j !== i));
 
   const handleRun = useCallback(async () => {
+    if (mods.length === 0) {
+      // Still run — shows identical plans as a sanity check
+    }
     setHasRun(true); setBaseRes(null); setModRes(null);
     setBLoad(true); setMLoad(true);
-    const [bRes, mRes] = await Promise.allSettled([
-      api.optimize({ weights: DEFAULT_WEIGHTS }),
-      api.optimize({ weights: DEFAULT_WEIGHTS, task_overrides: mods }),
-    ]);
-    setBaseRes(bRes.status === 'fulfilled' ? bRes.value : null);
-    setModRes (mRes.status === 'fulfilled' ? mRes.value : null);
-    setBLoad(false); setMLoad(false);
+
+    // Build the /what-if payload
+    const payload = {
+      scenario_name: `What-If Scenario (${mods.length} override${mods.length !== 1 ? 's' : ''})`,
+      task_modifications: mods.map(m => ({
+        task_id: m.task_id,
+        field: m.field,
+        value: m.value,
+      })),
+      block_modifications: [],
+    };
+
+    try {
+      const result = await api.whatIf(payload);
+      setBaseRes(result.baseline_plan);
+      setModRes(result.modified_plan);
+      setWhatIfResult(result);
+    } catch (e) {
+      console.error('what-if failed:', e);
+    } finally {
+      setBLoad(false); setMLoad(false);
+    }
   }, [mods]);
 
+  const [whatIfResult, setWhatIfResult] = useState(null);
   const bs = parseSummary(baseRes);
   const ms = parseSummary(modRes);
   const running = bLoading || mLoading;
@@ -292,6 +312,34 @@ export default function WhatIf() {
               <span style={{ color: 'var(--text-5)' }}>→</span>
               <span style={{ fontFamily: 'var(--mono)', fontWeight: 700 }}>{item.mod}</span>
               <DeltaBadge base={item.base} mod={item.mod} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Changed assignments diff */}
+      {hasRun && whatIfResult?.changed_assignments?.length > 0 && (
+        <div className="ob-scale-in" style={{ marginBottom: 18, background: 'var(--bg-card)',
+          border: '1px solid var(--border)', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
+          <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)',
+            fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+            letterSpacing: '0.08em', color: C.amber,
+            display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.amber,
+              animation: 'ob-dot-pulse 2s ease infinite' }} />
+            Changed Assignments ({whatIfResult.changed_assignments.length})
+          </div>
+          {whatIfResult.changed_assignments.map(c => (
+            <div key={c.block_id} style={{ display: 'flex', alignItems: 'center', gap: 10,
+              padding: '8px 14px', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
+              <span style={{ fontFamily: 'var(--mono)', color: C.orange, fontWeight: 700, minWidth: 80 }}>{c.block_id}</span>
+              <span style={{ fontSize: 11, color: 'var(--text-4)', flex: 1 }}>
+                Before: [{(c.before_tasks || []).join(', ') || 'none'}] → After: [{(c.after_tasks || []).join(', ') || 'none'}]
+              </span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 10.5,
+                color: c.after_value > c.before_value ? C.green : C.red }}>
+                {c.after_value > c.before_value ? '↑' : '↓'} {Math.abs(c.after_value - c.before_value).toFixed(2)}
+              </span>
             </div>
           ))}
         </div>

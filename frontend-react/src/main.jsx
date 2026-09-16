@@ -9,6 +9,8 @@ import Blocks from './pages/Blocks.jsx'
 import Opportunities from './pages/Opportunities.jsx'
 import Optimizer from './pages/Optimizer.jsx'
 import WhatIf from './pages/WhatIf.jsx'
+import Replan from './pages/Replan.jsx'
+import WeeklyPlan from './pages/WeeklyPlan.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -21,6 +23,8 @@ createRoot(document.getElementById('root')).render(
           <Route path="opportunities" element={<Opportunities />} />
           <Route path="optimizer" element={<Optimizer />} />
           <Route path="whatif" element={<WhatIf />} />
+          <Route path="replan" element={<Replan />} />
+          <Route path="weekly" element={<WeeklyPlan />} />
         </Route>
       </Routes>
     </BrowserRouter>

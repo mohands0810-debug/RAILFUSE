@@ -2,13 +2,35 @@ import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { api } from './api/client';
 
-const NAV = [
-  { to: '/',              icon: '◈', label: 'Command Center',     sub: 'Live overview' },
-  { to: '/tasks',         icon: '⊟', label: 'Maintenance Tasks',  sub: '25 tasks' },
-  { to: '/blocks',        icon: '▣', label: 'Block Explorer',     sub: '10 windows' },
-  { to: '/opportunities', icon: '⬡', label: 'Opportunity Engine', sub: 'Combinations' },
-  { to: '/optimizer',     icon: '⊙', label: 'Plan Optimizer',     sub: 'Live re-run' },
-  { to: '/whatif',        icon: '⟳', label: 'What-If Simulator',  sub: 'Scenarios' },
+const NAV_GROUPS = [
+  {
+    section: 'Core',
+    items: [
+      { to: '/',              icon: '◈', label: 'Command Center',     sub: 'Live overview' },
+      { to: '/tasks',         icon: '⊟', label: 'Maintenance Tasks',  sub: '25 tasks' },
+      { to: '/blocks',        icon: '▣', label: 'Block Explorer',     sub: '10 windows' },
+    ],
+  },
+  {
+    section: 'Optimization',
+    items: [
+      { to: '/opportunities', icon: '⬡', label: 'Opportunity Engine', sub: 'Combinations' },
+      { to: '/optimizer',     icon: '⊙', label: 'Plan Optimizer',     sub: 'Live re-run' },
+    ],
+  },
+  {
+    section: 'Scenarios',
+    items: [
+      { to: '/whatif',        icon: '⟳', label: 'What-If Simulator',  sub: 'Field overrides' },
+      { to: '/replan',        icon: '⚡', label: 'Dynamic Re-planning', sub: 'Inject & adapt' },
+    ],
+  },
+  {
+    section: 'Planning',
+    items: [
+      { to: '/weekly',        icon: '📅', label: 'Weekly Horizon',     sub: '7-day view' },
+    ],
+  },
 ];
 
 const TICKER_ITEMS = [
@@ -108,20 +130,25 @@ export default function App() {
 
           {/* Nav */}
           <nav className="sidebar-nav">
-            {NAV.map(({ to, icon, label, sub }, i) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/'}
-                className={({ isActive }) => `nav-link-item${isActive ? ' active' : ''}`}
-                style={{ animationDelay: `${i * 0.04}s` }}
-              >
-                <span className="nav-icon-wrap">{icon}</span>
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-5)', marginTop: 1 }}>{sub}</div>
-                </span>
-              </NavLink>
+            {NAV_GROUPS.map(({ section, items }) => (
+              <div key={section}>
+                <div className="sidebar-section">{section}</div>
+                {items.map(({ to, icon, label, sub }, i) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={to === '/'}
+                    className={({ isActive }) => `nav-link-item${isActive ? ' active' : ''}`}
+                    style={{ animationDelay: `${i * 0.04}s` }}
+                  >
+                    <span className="nav-icon-wrap">{icon}</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-5)', marginTop: 1 }}>{sub}</div>
+                    </span>
+                  </NavLink>
+                ))}
+              </div>
             ))}
           </nav>
 

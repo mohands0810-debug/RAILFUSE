@@ -1,200 +1,172 @@
 # RAILFUSE — Demo Guide
+**Smart India Hackathon 2026 · PS ID: SIH26027 · Team: Runtime Rebels**
 
-**Smart India Hackathon 2026 | PS ID: SIH26027**
+> ⚠️ All data shown is synthetic. No connection to live Indian Railways systems.
 
 ---
 
-## Quick Demo (5 minutes)
+## Prerequisites
 
-### 1. Start the Application
+| Service  | URL                     | Start Command |
+|----------|-------------------------|---------------|
+| Backend  | http://localhost:8000   | `cd backend && python -m uvicorn main:app --port 8000 --reload` |
+| Frontend | http://localhost:3000   | `cd frontend-react && npm run dev -- --port 3000` |
 
+---
+
+## 12-Step SIH Demo Flow
+
+### Step 1 — Launch & Overview
+- Open http://localhost:3000
+- See: **Command Center** with live stats (25 tasks, 10 blocks, 24 trains)
+- Note the disclaimer banner confirming synthetic data
+- Observe the scrolling ticker showing real-time plan stats
+
+### Step 2 — Maintenance Task Intelligence
+- Navigate to **Maintenance Tasks**
+- Show T001 (Track Tamping, DLI-MTJ, maintenance_debt=28.5)
+- Explain the Maintenance Debt formula:
+  `debt = (days_overdue × 0.5) + (deferrals × 2.0 × 1.5^(n-1)) + (severity × criticality × 1.0)`
+- Explain Flexibility Score: fraction of future blocks this task can feasibly fit in
+
+### Step 3 — Block Explorer
+- Navigate to **Block Explorer**
+- Show BLK001 (90-min Engineering Block, DLI-MTJ section)
+- Point out: remaining capacity, start/end times, affected track, resource availability
+
+### Step 4 — Opportunity Engine
+- Navigate to **Opportunity Engine**
+- Select block BLK001
+- Show the **Opportunity Graph**: nodes = feasible tasks, edges = compatible pairs
+- Show the **Multi-Department Fusion** step: Engineering + S&T compatible → fused in one block
+- Show **Compatible Combinations** ranked by adjusted value
+
+### Step 5 — Plan Optimizer (Core Innovation)
+- Navigate to **Plan Optimizer**
+- Click **Run Optimization** 
+- Show decisions table: SELECTED (green), DEFERRED (amber), REJECTED (red), PROTECTED (purple)
+- Key points:
+  - Deterministic: same input → same output (seed 42)
+  - Every decision has a transparent reason — no black box
+  - Zero-possession bonus: tasks that fit within existing windows preferred
+  - Future block protection: low-flex tasks protected for their best future window
+
+### Step 6 — Explainability Drill-Down
+- In the optimizer results, click any task
+- Show the explanation: "Selected for BLK003: maintenance_debt=28.5, combined with T004 (S&T) — compatible departments, 45-min remaining capacity after assignment. Opportunity cost: 3.2"
+- Show a rejected task: "Rejected: task duration 90 min exceeds block capacity of 60 min"
+- Show a deferred task: "Deferred: 3 future windows available. BLK002 is a better fit — section match, more capacity"
+
+### Step 7 — What-If Simulator
+- Navigate to **What-If Simulator**
+- Add override: Task T001, field `maintenance_debt`, value `55`
+- Click **Run Comparison**
+- Show baseline vs modified side-by-side
+- Show **Changed Assignments** section: which blocks changed due to the higher-debt task
+- Key message: the system automatically re-prioritizes — no manual rescheduling needed
+
+### Step 8 — Dynamic Re-planning (Highlight Feature)
+- Navigate to **Dynamic Re-planning**
+- Fill in a new critical defect:
+  - Task ID: `CRIT-C17-001`
+  - Section: `DLI-MTJ`
+  - Department: `Engineering`
+  - Task Type: `Emergency Track Defect Repair`
+  - Duration: `45`, Severity: `5`, Criticality: `5`, Days Overdue: `2`
+- Click **Inject & Re-optimize**
+- Show: Before plan → After plan comparison
+- Show: Changed Decisions list (tasks displaced by the critical task)
+- Show: Narrative explanation ("New critical task CRIT-C17-001 was SELECTED → assigned to BLK003. 2 decisions changed.")
+- Key message: Traditional systems require manual rescheduling. RAILFUSE automatically recalculates the entire plan the moment a new defect is discovered.
+- Click **↺** to reset the demo dataset
+
+### Step 9 — Weekly Horizon View
+- Navigate to **Weekly Horizon**
+- Show the 7-day utilization bar chart
+- Expand each day to show which tasks were planned vs deferred
+- Point out: departments covered per day, zero-possession blocks
+- Key message: The same optimizer, extended across the full planning horizon — no separate weekly algorithm needed
+
+### Step 10 — Multi-Department Fusion
+- Return to **Opportunity Engine**
+- Select any block with multiple feasible tasks from different departments
+- Show: "Engineering (T001, 60m) + S&T (T007, 15m) = 75m total — fits in 90m block. Compatible per rule CR_ENG_ST."
+- Show: Without fusion = 2 separate possessions. With fusion = 1 possession, zero additional possession
+- This is RAILFUSE's core operational innovation for Indian Railways efficiency
+
+### Step 11 — Conflict Detection Demo
+- In **Plan Optimizer**, explain the constraint checks:
+  1. Duration feasibility: task_duration ≤ block.remaining_capacity
+  2. Section match: task.section == block.section
+  3. Train conflict: no active train in section within safety_buffer (10 min)
+  4. Resource availability: all required resources available in block
+  5. Department compatibility: must satisfy compatibility_rules
+- These are the exact checks run for every task-block pair before considering combinations
+
+### Step 12 — Scalability & Research Positioning
+- Open http://localhost:8000/docs to show the full OpenAPI spec
+- Point out: `/replan`, `/weekly-plan`, `/asset-availability`, `/what-if` endpoints
+- Mention test suite: **103 tests pass**, all deterministic, all behaviour-based
+- Research positioning: "Individual concepts (block scheduling, constraint optimization, explainability) are established. RAILFUSE's differentiation is the specific integrated workflow: real-time conflict detection + multi-department fusion + zero-possession optimization + dynamic replanning — applied together in a single system for Indian Railways maintenance planning."
+
+---
+
+## Quick Reset
+
+If the demo state gets messy (extra tasks from replanning):
 ```bash
-# Terminal 1: Backend
-cd backend && uvicorn main:app --reload
+curl -X POST http://localhost:8000/reset-demo
+```
+Or click **↺** in the Dynamic Re-planning page.
 
-# Terminal 2: Frontend
-cd frontend-react && npm run dev
+---
+
+## Architecture Quick Reference
+
+```
+backend/
+  main.py                    — FastAPI app, all endpoints
+  models/__init__.py         — Pydantic models (all data shapes)
+  config.py                  — Config (optimizer seed, weights)
+  data_loader.py             — Loads synthetic JSON dataset
+  optimization/
+    optimizer.py             — Core 10-step pipeline
+    intelligence.py          — Debt, Flexibility, Effective Priority
+    conflicts.py             — Train, Resource, Section, Duration checks
+    opportunity_graph.py     — Compatibility graph + combinations
+    explainability.py        — Human-readable per-task reasons
+  data/synthetic/            — tasks.json, blocks.json, trains.json, etc.
+  tests/                     — 103 tests (API, optimizer, replanning)
+
+frontend-react/src/
+  pages/
+    Dashboard.jsx            — Command Center (live stats)
+    Tasks.jsx                — Maintenance task list + filters
+    Blocks.jsx               — Block explorer
+    Opportunities.jsx        — Opportunity Engine + fusion visual
+    Optimizer.jsx            — Plan optimizer + decisions
+    WhatIf.jsx               — What-If scenario simulator
+    Replan.jsx               — Dynamic re-planning (NEW)
+    WeeklyPlan.jsx           — Weekly horizon view (NEW)
+  api/client.js              — API client (all endpoints)
 ```
 
-Open http://localhost:3000
+---
 
-### 2. Demo Sequence
+## Key Metrics (Synthetic Dataset)
 
-1. **Command Center** → Show live KPIs from actual calculations
-2. **Maintenance Tasks** → Show 25 tasks with debt/flexibility scores, filter by department
-3. **Block Explorer** → Show 10 blocks → click one to see inline opportunity graph
-4. **Click "Run Optimizer"** → Watch algorithm run in real time
-5. **Opportunity Engine** → Select BLK003 → See compatible combination T011+T012
-6. **Plan Optimizer** → Adjust weights → Re-run → Show plan changes
-7. **What-If** → Increase T015 severity to 5 → Re-run → Confirm result changes
+| Metric | Value |
+|--------|-------|
+| Total Tasks | 25 |
+| Maintenance Blocks | 10 |
+| Train Movements | 24 |
+| Resources | 12 |
+| Compatibility Rules | 6 |
+| Optimizer Seed | 42 (deterministic) |
+| Typical Planned Tasks | 8–12 |
+| Test Suite | 103 tests, all passing |
 
 ---
 
-## Full SIH Judge Demonstration (15 minutes)
-
-### Opening (1 minute)
-
-> *"RAILFUSE is an Opportunity-Aware Adaptive Block Planner for Indian Railways. Traditional systems ask: which task goes in this block? RAILFUSE asks: what maximum useful maintenance can we safely accomplish using this already available block?"*
-
----
-
-### Scene 1: Command Center (2 minutes)
-
-Open the **Command Center** dashboard.
-
-Point out:
-- **25 maintenance tasks** across Delhi-Mumbai and Delhi-Howrah corridors
-- **10 available blocks** with varying capacity
-- **5 high-debt tasks** requiring urgent attention
-- **3 low-flexibility tasks** with few future windows
-- **Block utilization at 74%** (calculated dynamically)
-- **145 minutes of possession saved** so far
-
-> *"Every number here comes from the actual algorithm, not static data."*
-
----
-
-### Scene 2: Maintenance Tasks (2 minutes)
-
-Open **Maintenance Tasks** view.
-
-Filter by **Department: Engineering**.
-
-Point out **T015 — Urgent Track Replacement**:
-- Maintenance Debt: **47.2** (highest in dataset)
-- Previous deferrals: 4
-- Days overdue: 21
-- Flexibility: 0.15 (very few future windows)
-
-> *"This task has been deferred 4 times. RAILFUSE calculates its debt score as 47.2, making it the highest priority task in the system. With flexibility of only 0.15, it has very few remaining scheduling opportunities."*
-
----
-
-### Scene 3: Available Blocks (1 minute)
-
-Open **Available Blocks** view.
-
-Show **BLK001 (DLI-MTJ, 22:00–23:30)**:
-- Duration: 90 minutes
-- Existing tasks: None
-- Remaining capacity: 90 minutes
-- Available resources: Tamper (R001), Gang (R003)
-
----
-
-### Scene 4: Run Optimization (2 minutes)
-
-Click **"Run Optimization"** button.
-
-Watch the result:
-
-> *"The optimizer has just run through 10 blocks, 25 tasks, 24 train movements, and 12 resources. Let me show you what it found."*
-
-Show the summary:
-- **9 tasks planned** across 7 of 10 blocks
-- **6 deferred** (better future windows exist)
-- **10 rejected** (section mismatch, train conflicts, or capacity)
-- **0 minutes additional possession** for 6 of the 7 assigned blocks
-
----
-
-### Scene 5: Opportunity Engine — HERO SCREEN (4 minutes)
-
-Open **Opportunity Engine**.
-
-Select **BLK006 (MTJ-GWL, 01:00–03:00, 120 minutes)**.
-
-Walk through the visualization:
-
-**Step 1 — Block Information**
-> *"BLK006 is a 120-minute engineering block on the Mathura–Gwalior section."*
-
-**Step 2 — Feasible Tasks**
-> *"The algorithm found 4 tasks feasible for this block: T011, T012, T013, T014."*
-
-**Step 3 — Opportunity Graph**
-> *"The opportunity graph shows that T011 and T012 are compatible — same department, same section, combined duration 85 minutes (well within the 120-minute block)."*
-
-Point to the compatibility check results:
-- ✅ Same section (MTJ-GWL)
-- ✅ Compatible departments (Engineering + Engineering)
-- ✅ Resources available (R001, R002)
-- ✅ Combined duration 85 min ≤ 120 min capacity
-- ✅ No train conflicts
-- ❌ T013 + T011 — Resource conflict (both need R001)
-- ❌ T014 — Train conflict (12051 passes at 01:45)
-
-**Step 4 — Selected Combination**
-> *"RAILFUSE selects T011 + T012. Combined duration: 85 minutes. Remaining capacity: 35 minutes. Additional possession: ZERO."*
-
-**Step 5 — Explanations**
-Show the explanation panel:
-- T011: *"Selected: fits within capacity, no conflicts, required resources available."*
-- T012: *"Selected: compatible with T011, combined duration within capacity."*
-- T013: *"Rejected: resource R001 already assigned to T011."*
-- T014: *"Rejected: train 12051 (Rajdhani) passes through section at 01:45, conflicting with block window."*
-
-> *"Every explanation is dynamically generated from the actual algorithm results. Nothing is hardcoded."*
-
----
-
-### Scene 6: Optimized Plan / Gantt (1 minute)
-
-Open **Plan Optimizer** page.
-
-Show the current plan table:
-- Tasks planned by block (BLK001, BLK003, BLK005, etc.)
-- Block values and zero-possession counts
-
-Click a block row:
-> *"T011 and T012 are both scheduled within the 105-minute BLK003 window. No additional possession was needed."*
-
----
-
-### Scene 7: What-If (2 minutes)
-
-Open **What-If Analysis**.
-
-Select scenario: **"Change T015 severity to 5 (Critical)"**
-
-Click **"Run What-If"**
-
-Show comparison:
-- **Before:** T015 deferred, BLK008 assigned T016 (value 28.4)
-- **After:** T015 selected for BLK008 (value 41.7), T016 deferred
-- Explanation: *"T015's severity increase to 5 raised its maintenance debt to 62.0, making it the highest-priority Engineering task. The optimizer now prefers T015 over T016 for BLK008."*
-
-> *"This proves the system actually recalculates — it's not a static demo."*
-
----
-
-### Closing (1 minute)
-
-> *"RAILFUSE demonstrates four key innovations:"*
-> 
-> *"First: Opportunity-aware planning — actively searching for compatible tasks within existing blocks."*
-> 
-> *"Second: Transparent maintenance debt and flexibility scoring — no black box decisions."*
-> 
-> *"Third: Zero-additional-possession preference — 7 of 10 blocks required no extension."*
-> 
-> *"Fourth: Dynamic explainability — every decision is explained from actual algorithm results, not hardcoded text."*
-> 
-> *"For SIH 2026, we believe RAILFUSE demonstrates a technically sound foundation for AI-powered block planning on Indian Railways."*
-
----
-
-## Technical Questions Preparation
-
-| Question | Answer |
-|----------|--------|
-| How is maintenance debt calculated? | Formula: days_overdue × 0.5 + deferrals × 2.0 × 1.5^(deferrals-1) + severity × criticality. See ALGORITHM.md. |
-| Is this real railway data? | No — synthetic demonstration data only. Clearly labelled throughout. |
-| How do you ensure different departments can share a block? | Compatibility rules explicitly define which department pairs can share blocks and under what conditions. |
-| What happens if train data changes? | Re-run `/optimize` — the algorithm checks all train movements dynamically. |
-| Can this scale to the full railway network? | The prototype demonstrates the algorithm on a representative dataset. Full network optimization requires distributed infrastructure and integration with live systems. |
-| How is the algorithm explainable? | Every decision traces to specific constraint checks and score calculations. No black box. |
-
----
-
-*Demo guide version: 1.0.0*
+*RAILFUSE — Opportunity-Aware Adaptive Block Planning*  
+*SIH 2026 · PS ID: SIH26027 · Team: Runtime Rebels*

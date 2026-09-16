@@ -396,6 +396,126 @@ The prototype API does not require authentication. In a production deployment, J
 
 ---
 
+## New Endpoints (v1.1.0)
+
+### POST /replan
+
+**Description:** Dynamic Re-planning. Inject a new critical maintenance task and re-run the full optimizer. Returns before/after plan comparison with changed decisions and narrative.
+
+**Request Body:**
+```json
+{
+  "task_id": "CRIT-C17-001",
+  "corridor": "C17-DLI-MTJ",
+  "section": "DLI-MTJ",
+  "department": "Engineering",
+  "task_type": "Emergency Track Defect Repair",
+  "duration": 45,
+  "severity": 5,
+  "criticality": 5,
+  "days_overdue": 2,
+  "previous_deferrals": 0
+}
+```
+
+**Response:**
+```json
+{
+  "replan_id": "REPLAN-20260916-045231",
+  "generated_at": "2026-09-16T04:52:31",
+  "added_task": { "task_id": "CRIT-C17-001", "maintenance_debt": 31.5, "flexibility_score": 0.2, "..." },
+  "before_plan": { "plan_id": "...", "task_decisions": {}, "summary": {} },
+  "after_plan":  { "plan_id": "...", "task_decisions": {}, "summary": {} },
+  "changed_decisions": [
+    { "task_id": "T004", "before_status": "SELECTED", "after_status": "DEFERRED", "..." }
+  ],
+  "new_task_decision": { "status": "SELECTED", "assigned_block": "BLK003", "reason": "..." },
+  "summary_delta": { "planned_tasks_change": 1, "deferred_tasks_change": -1, "..." },
+  "narrative": "New critical task CRIT-C17-001 (dept: Engineering, severity: 5/5, debt: 31.5) was injected..."
+}
+```
+
+**Note:** This endpoint mutates in-memory state (adds the injected task). Call `POST /reset-demo` to restore original dataset.
+
+---
+
+### POST /reset-demo
+
+**Description:** Resets the in-memory dataset to the original synthetic data. Use after replanning demos.
+
+**Response:**
+```json
+{ "status": "reset", "tasks": 25, "message": "Dataset restored to original synthetic data." }
+```
+
+---
+
+### GET /asset-availability
+
+**Description:** Returns prototype-level asset availability estimates based on maintenance debt, critical tasks, and overdue days.
+
+> **DISCLAIMER:** This is a RAILFUSE SIH 2026 prototype estimate. Formula: `availability_pct = max(0, 100 - debt*0.8 - critical_tasks*4)`. Not an official Indian Railways metric.
+
+**Query Parameters:**
+- `department` (optional): Filter by department name
+- `min_risk` (optional): Filter by minimum risk level (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`)
+
+**Response:** Array of `AssetAvailabilityEstimate` objects sorted by availability ascending (worst first).
+
+```json
+[
+  {
+    "asset_id": "TRK-UP-DLI-MTJ-001",
+    "asset_type": "Track Geometry",
+    "section": "DLI-MTJ",
+    "department": "Engineering",
+    "availability_pct": 42.3,
+    "maintenance_debt": 28.5,
+    "outstanding_critical_tasks": 2,
+    "risk_level": "HIGH",
+    "notes": "High cumulative debt (28.5). 2 critical/high-severity task(s) pending.",
+    "disclaimer": "Prototype Asset Availability Estimate — RAILFUSE SIH 2026. Not an official Indian Railways metric."
+  }
+]
+```
+
+---
+
+### GET /weekly-plan
+
+**Description:** Generates an optimized maintenance plan across the full 7-day block horizon. Groups blocks by calendar day and runs the full optimizer. Returns day-by-day breakdown.
+
+**Response:**
+```json
+{
+  "plan_id": "WEEKLY-20260916-045231",
+  "horizon_start": "2026-09-17",
+  "horizon_end": "2026-09-23",
+  "days": [
+    {
+      "date": "2026-09-17",
+      "day_name": "Wednesday",
+      "blocks": ["BLK001", "BLK002"],
+      "planned_tasks": ["T001", "T004"],
+      "deferred_tasks": ["T007"],
+      "total_capacity_minutes": 180,
+      "used_capacity_minutes": 105,
+      "block_utilization_pct": 58.3,
+      "additional_possession_minutes": 0,
+      "zero_possession_blocks": 2,
+      "departments_covered": ["Engineering", "S&T"],
+      "block_value": 14.2
+    }
+  ],
+  "total_tasks_planned": 9,
+  "total_tasks_deferred": 6,
+  "total_block_utilization_pct": 54.1,
+  "disclaimer": "RAILFUSE Weekly Plan — Synthetic demonstration data only..."
+}
+```
+
+---
+
 ## CORS
 
 The API allows requests from:
@@ -406,4 +526,5 @@ The API allows requests from:
 
 ---
 
-*API version: 1.0.0 — Implemented*
+*API version: 1.1.0 — Updated for Dynamic Re-planning, Weekly Planning, Asset Availability*
+

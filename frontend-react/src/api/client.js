@@ -14,6 +14,7 @@ async function req(path, opts = {}) {
 }
 
 export const api = {
+  // Core data
   health:             ()        => req('/'),
   stats:              ()        => req('/stats'),
   tasks:              (p = {})  => req('/tasks?' + new URLSearchParams(p)),
@@ -23,8 +24,18 @@ export const api = {
   trains:             (p = {})  => req('/trains?' + new URLSearchParams(p)),
   resources:          (p = {})  => req('/resources?' + new URLSearchParams(p)),
   compatibilityRules: ()        => req('/compatibility-rules'),
+
+  // Optimization
   optimize:           (cfg)     => req('/optimize', { method: 'POST', body: cfg ? JSON.stringify(cfg) : null }),
   optimizedPlan:      ()        => req('/optimized-plan'),
   opportunities:      (bid)     => req('/opportunities' + (bid ? `?block_id=${bid}` : '')),
   whatIf:             (payload) => req('/what-if', { method: 'POST', body: JSON.stringify(payload) }),
+
+  // Dynamic re-planning
+  replan:             (task)    => req('/replan', { method: 'POST', body: JSON.stringify(task) }),
+  resetDemo:          ()        => req('/reset-demo', { method: 'POST' }),
+
+  // Weekly plan + asset availability
+  weeklyPlan:         ()        => req('/weekly-plan'),
+  assetAvailability:  (p = {})  => req('/asset-availability?' + new URLSearchParams(p)),
 };
